@@ -74,7 +74,7 @@
  evil-collection
  :after evil
  :config
- (setq evil-collection-mode-list '(dashboard dired ibuffer))
+ (setq evil-collection-mode-list '(dashboard dired ibuffer neotree magit))
  (evil-collection-init))
 (use-package evil-tutor)
 
@@ -100,9 +100,8 @@
   (leader-key 
     "s" '(lambda () (interactive) (evil-ex "%s/find/replace/gI")))
 
-  ;; buffer related
   (leader-key
-    "b" '(:ignore t :wk "buffer")
+    "b" '(:ignore t :wk "Buffer")
     "bb" '(switch-to-buffer :wk "Switch buffer")
     "bk" '(kill-this-buffer :wk "Kill this buffer")
     "bi" '(ibuffer :wk "Ibuffer") ;; ig this is like panes? in tmux
@@ -114,10 +113,9 @@
     "d" '(:ignore t :wk "Dired")
     "dd" '(dired :wk "Open dired")
     "dj" '(dired-jump :wk "Dired jump to current")
-    "dn" '(neotree-dir :wk "Open directory in neotree")
-    "dp" '(peep-dired :wk "Peep-dired"))
+    "do" '(dired-open-with :wk "Dired jump to current")
+    "dn" '(neotree-dir :wk "Open directory in neotree"))
 
-  ;; eval related
   (leader-key
     "e" '(:ignore t :wk "Eshell/Evaluate")    ;; not a command but a which key description
     "eb" '(eval-buffer :wk "Evaluate elisp in buffer")
@@ -129,7 +127,6 @@
     "er" '(eval-region :wk "Evaluate elisp in region")
     "es" '(eshell :which-key "Eshell"))
 
-  ;; some functional ones i like
   (leader-key
     "SPC" '(counsel-M-x :wk "Counsel M-x")
     "." '(find-file :wk "Find file") ;; make this more like the one in neovim
@@ -150,14 +147,15 @@
     "tu" '(vundo :wk "Toggle vundo tree")
     "tv" '(vterm-toggle :wk "Toggle vterm"))
 
-  ;; format elisp
   (leader-key
     "f" '(:ignore t :wk "Format")
     "fe" '(:ignore t :wk "Format Elisp")
     "feb" '(elisp-autofmt-buffer :wk "Format the entire buffer")
-    "fer" '(elisp-autofmt-region :wk "Format the selected text"))
+    "fer" '(elisp-autofmt-region :wk "Format the selected text")
+    "fl"  '(:ignore :wk "Lsp format")
+    "flr"  '(lsp-format-region :wk "Format region")
+    "flb"  '(lsp-format-buffer :wk "Format buffer"))
 
-  ;; window related keybindings
   (leader-key
     "w" '(:ignore t :wk "Windows")
     ;; Window splits
@@ -177,7 +175,6 @@
     "wK" '(buf-move-up :wk "Buffer move up")
     "wL" '(buf-move-right :wk "Buffer move right"))
 
-  ;; org mode keybindings
   (leader-key
     "m" '(:ignore t :wk "Org")
     "ma" '(org-agenda :wk "Org agenda")
@@ -191,7 +188,6 @@
     "mpe" '(org-timer-stop :wk "End a timer")
     "mpp" '(org-timer-pause-or-continue :wk "Pause a timer")
     "ms" '(org-schedule :wk "Set an org schedule"))
-  ;;"md" '(org-deadline :wk "Set an org deadline"))
   ;;C-c ! inactive timestamp
   ;;C-c . Plain timestamp
 
@@ -201,13 +197,12 @@
 
   (leader-key
     "md" '(:ignore t :wk "Date/deadline")
-    "mdt" '(org-deadline :wk "Org deadline")
+    "mdd" '(org-deadline :wk "Org deadline")
     "mdt" '(org-time-stamp :wk "Org time stamp"))
 
   (leader-key 
     "mv" '(multi-vterm :wk "Launch a vterm instance"))
 
-  ;; org gettings things done related
   (leader-key
     "y" '(:ignore t :wk "GTD")
     "yf" '((lambda () (interactive) (cd "~/Notes/GTD") (call-interactively 'find-file)) :wk "Find GTD files")
@@ -217,7 +212,6 @@
     "yt" '(org-ctrl-c-ctrl-c :wk "Set tags for an entry") ;; C-c C-c  for tags
     "yg" '((lambda () (interactive) (org-agenda nil "g")) :wk "View the GTD view in agendas directly"))
 
-  ;; org roam related
   (leader-key 
     "n" '(:ignore t :wk "Org Roam")
     "nl" '(org-roam-buffer-toggle :wk "View all files linking to this file")
@@ -231,22 +225,18 @@
     "nt" '(org-roam-tag-add :wk "Add a tag to a node")
     "na" '(org-roam-alias-add :wk "Create an alias for a note"))
 
-  ;; dashboard
   (leader-key
-    "d" '(:ingore t :wk "Dashboard")
-    "dr" '(dashboard-refresh-buffer :wk "Refresh dashboard"))
+    "x" '(:ingore t :wk "Dashboard")
+    "xr" '(dashboard-refresh-buffer :wk "Refresh dashboard"))
 
-  ;; magit
   (leader-key
     "g" '(:ingore t :wk "Use git")
     "gs" '(magit-status :wk "Magit status")
     "gt" '(git-timemachine:wk "Git time machine"))
 
-  ;; projectile
   (leader-key
     "p" '(projectile-command-map :wk "Projectile")))
 
-;; leader-key f lsp-format buffer
 ;; (define-key global-map (kbd "C-.") 'company-files)
 
 (use-package all-the-icons :ensure t :if (display-graphic-p))
@@ -344,6 +334,15 @@ one, an error is signaled."
  :after company
  :diminish
  :hook (company-mode . company-box-mode))
+
+(use-package dired-open-with)
+
+(use-package dired-preview
+  :after dired
+  :config
+     (evil-define-key 'normal dired-mode-map (kbd "h") 'dired-up-directory)
+     (evil-define-key 'normal dired-mode-map (kbd "l") (kbd "RET") )
+)
 
 (use-package doom-modeline
   :ensure t
@@ -866,6 +865,8 @@ See also `org-save-all-org-buffers'"
 ;; and ig some javascript frameworks cause i ought to know webdev = more employable
 ;; react ofc that was the one that made you the most employable right?
 
+
+
 (use-package lsp-ivy)
 
 (use-package lsp-treemacs)
@@ -877,6 +878,25 @@ See also `org-save-all-org-buffers'"
 
 (add-hook 'c++-mode-hook #'(lambda () (hs-minor-mode 1)))
 (add-hook 'c-mode-hook #'(lambda () (hs-minor-mode 1)))
+
+(use-package neotree
+
+  :config
+  (setq neo-smart-open t
+        neo-theme "ascii"
+        neo-show-hidden-files t
+        neo-window-width 28
+        neo-window-fixed-size nil
+        inhibit-compacting-font-caches t
+        projectile-switch-project-action 'neotree-projectile-action) 
+        ;; truncate long file names in neotree
+        (add-hook 'neo-after-create-hook
+           #'(lambda (_)
+               (with-current-buffer (get-buffer neo-buffer-name)
+                 (setq truncate-lines t)
+                 (setq word-wrap nil)
+                 (make-local-variable 'auto-hscroll-mode)
+                 (setq auto-hscroll-mode nil)))))
 
 (use-package
  toc-org
@@ -914,18 +934,6 @@ See also `org-save-all-org-buffers'"
 (use-package magit-section)
 
 (require 'org-tempo)
-
-;; (custom-theme-set-faces
-;;     'user
-;;     ;;`(org-level-8 ((t (,@headline ,@variable-tuple))))
-;;     ;;`(org-level-7 ((t (,@headline ,@variable-tuple))))
-;;     ;;`(org-level-6 ((t (,@headline ,@variable-tuple))))
-;;     ;;`(org-level-5 ((t (,@headline ,@variable-tuple))))
-;;     `(org-level-4 ((t (:height 1.1))))
-;;     `(org-level-3 ((t (:height 1.25))))
-;;     `(org-level-2 ((t (:height 1.5))))
-;;     `(org-level-1 ((t (:height 1.75))))
-;;     `(org-document-title ((t (:height 2.0 :underline nil)))))
 
 (font-lock-add-keywords
  'org-mode
@@ -1029,7 +1037,7 @@ See also `org-save-all-org-buffers'"
  :diminish
  :hook ((org-mode prog-mode) . rainbow-mode))
 
-(use-package projectile :config (projectile-mode 1))
+(use-package projectile :config (projectile-mode 1)) ;;(projectile-cache-file "/home/martin/.cache/projectile.cache"))
 
 (use-package transient)
 
