@@ -186,7 +186,7 @@
     "mt" '(org-todo :wk "Org todo") ;; C-c C-t for the state of the entry
     "mB" '(org-babel-tangle :wk "Org babel tangle")
     "mT" '(org-todo-list :wk "Org todo list")
-    "mc" '(org-toggle-checkbox "Toggle between the states of a checkbox")
+    "mc" '(org-toggle-checkbox :wk "Toggle between the states of a checkbox")
     "mps" '(org-timer-set-timer :wk "Set a timer using org")
     "mpe" '(org-timer-stop :wk "End a timer")
     "mpp" '(org-timer-pause-or-continue :wk "Pause a timer")
@@ -201,6 +201,7 @@
 
   (leader-key
     "md" '(:ignore t :wk "Date/deadline")
+    "mdt" '(org-deadline :wk "Org deadline")
     "mdt" '(org-time-stamp :wk "Org time stamp"))
 
   (leader-key 
@@ -229,6 +230,11 @@
     "nr" '(org-roam-node-random :wk "Open a random note")
     "nt" '(org-roam-tag-add :wk "Add a tag to a node")
     "na" '(org-roam-alias-add :wk "Create an alias for a note"))
+
+  ;; dashboard
+  (leader-key
+    "d" '(:ingore t :wk "Dashboard")
+    "dr" '(dashboard-refresh-buffer :wk "Refresh dashboard"))
 
   ;; magit
   (leader-key
@@ -631,6 +637,8 @@ one, an error is signaled."
          (agenda . "a")
          (registers . "e")))
  :custom
+ (dashboard-footer-messages '("From freedom came elegance!" "Where there is a shell, there is a way" "There's no place like 127.0.0.1" "Free as in freedom" "If you can read this, Xorg is still working" "Powered by Gentoo" "Powered by GNU/Linux" "u like regex.. dont u?" "Richard Stallman is proud of you" "“Talk is cheap. Show me the code.” \n         - Linus Torvalds" "“Well, what is a computer? A computer is a universal machine.” \n                       - Richard Stallman" "UNIX! Live Free or Die" "Linux is user friendly. It's just very picky about who its friends are." " “Intelligence is the ability to avoid doing work, yet getting the work done.” \n                               - Linus Torvalds" "Monolithic Multipurpose Xenodochial Xsystem" "Keep it simple, stupid!" "the quieter you become, the more you are able to hear" "Designed for GNU/Linux" "Certified for Microsoft© Windows™" "Certified for Windows Vista™" "Compatible with Windows®7" "Works with Windows Vista™" "Microsoft© Windows™ Capable" "Emacs is written in Lisp, which is the only computer language that is beautiful" "I showed you my source code, plz respond" "Configured by mpetco"))
+ (dashboard-footer-icon nil)
  (dashboard-modify-heading-icons
   '((recents . "file-text") (bookmarks . "book")))
  :config
@@ -726,11 +734,13 @@ See also `org-save-all-org-buffers'"
         (lambda (&rest _)
           (gtd-save-org-buffers)))
 
+;; default agenda view 
+(setq org-agenda-span 2)
+
 ;; variables for the command below
 (setq gtd/next-action-head "Next action: ")
 (setq gtd/deadline-head "Deadline: ")
 (setq gtd/inbox-head "Inbox: ")
-(setq gtd/onhold-head "Delayed until: ")
 (setq gtd/complete-head "Completed items: ")
 (setq gtd/project-head "Projects: ")
 (setq gtd/someday-head "Someday/maybe: ")
@@ -740,13 +750,13 @@ See also `org-save-all-org-buffers'"
       '(
         ("g" "GTD view"
          ((agenda)
-          (todo "NEXT" ((org-agenda-overriding-header gtd/next-action-head)))
-          (todo "DEADLINE" ((org-agenda-overriding-header gtd/deadline-head)))
+          (tags-todo "+PRIORITY=\"A\"" ((org-agenda-overriding-header gtd/next-action-head)))
+          (search "DEADLINE" ((org-agenda-overriding-header gtd/deadline-head)))
+          ;;(search "SCHEDULE" ((org-agenda-overriding-header gtd/deadline-head)))
           (todo "COMPLETE" ((org-agenda-overriding-header gtd/complete-head)))
           (todo "TODO" ((org-agenda-overriding-header gtd/inbox-head)))
-          (todo "HOLD" ((org-agenda-overriding-header gtd/onhold-head)))
           (todo "PROJECT" ((org-agenda-overriding-header gtd/project-head)))
-          (todo "SOMEDAY"  ((org-agenda-overriding-header gtd/someday-head)))
+          (todo "HOLD"  ((org-agenda-overriding-header gtd/someday-head)))
           ))))
 
 ;; Capture templates to capture ideas into the inbox thing
@@ -780,9 +790,9 @@ See also `org-save-all-org-buffers'"
 ;; gets rid of the category display for to do items
 (setq org-agenda-prefix-format
       '((agenda . " ")
-        (todo   . " %T ")
-        (tags   . " %i %-12:c")
-        (search . " %i %-12:c")))
+        (todo   . " ") ;; display the deadline date and schedule date too see the dashboard menu for that too
+        (tags   . " ")
+        (search . " %(let ((scheduled (org-get-deadline-time (point)))) (if scheduled (format-time-string \"%Y-%m-%d\" scheduled) \"\")) ")))
 
 ;; Refile
 (setq org-refile-use-outline-path 'file)
@@ -795,7 +805,7 @@ See also `org-save-all-org-buffers'"
 
 ;; todo keywords
 (setq org-todo-keywords
-      '((sequence "TODO(t)" "NEXT(n)" "HOLD(h)" "PROJECT(p)" "DEADLINE(d)" "|" "COMPLETE(c)")))
+      '((sequence "TODO(t)" "HOLD(h)" "PROJECT(p)" "|" "COMPLETE(c)")))
 
 (menu-bar-mode -1)
 (tool-bar-mode -1)
@@ -903,6 +913,8 @@ See also `org-save-all-org-buffers'"
   (org-roam-setup))
 (use-package magit-section)
 
+(require 'org-tempo)
+
 ;; (custom-theme-set-faces
 ;;     'user
 ;;     ;;`(org-level-8 ((t (,@headline ,@variable-tuple))))
@@ -921,7 +933,7 @@ See also `org-save-all-org-buffers'"
          (compose-region (match-beginning 1) (match-end 1) "•"))))))
 ;; add X emoji for - [X] yada yada
 
-(setq org-clock-sound "~/.config/emacs/Bicycle-bell-2.wav")
+(setq org-clock-sound "~/.config/emacs/sounds/Bicycle-bell-2.wav")
 (setq org-timer-default-timer 25)
 
 (use-package
