@@ -1,9 +1,9 @@
-(defvar elpaca-installer-version 0.8)
+(defvar elpaca-installer-version 0.9)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
 (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-                              :ref nil :depth 1
+                              :ref nil :depth 1 :inherit ignore
                               :files (:defaults "elpaca-test.el" (:exclude "extensions"))
                               :build (:not elpaca--activate-package)))
 (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
@@ -37,23 +37,19 @@
 (add-hook 'after-init-hook #'elpaca-process-queues)
 (elpaca `(,@elpaca-order))
 
-;; Install a package via the elpaca macro
-;; See the "recipes" section of the manual for more details.
-
-;; (elpaca example-package)
-
-;; Install use-package support
+;; install use-package support
 (elpaca elpaca-use-package
   ;; Enable use-package :ensure support for Elpaca.
   (elpaca-use-package-mode))
-;; Assume :elpaca t unless otherwise specified.
-  (setq elpaca-use-package-by-default t)
+
+;; Assume :elpaca t unless otherwise specified
+(setq use-package-always-ensure t)
 
 ;;When installing a package used in the init file itself,
 ;;e.g. a package which adds a use-package key word,
 ;;use the :wait recipe keyword to block until that package is installed/configured.
 ;;For example:
-;;(use-package general :ensure (:wait t) :demand t)
+;; (use-package general :ensure (:wait t) :demand t)
 
 ;;Turns off elpaca-use-package-mode current declaration
 ;;Note this will cause evaluate the declaration immediately. It is not deferred.
@@ -70,15 +66,16 @@
  (setq evil-undo-system 'undo-fu)
  (setq evil-want-C-u-scroll t)
  (evil-mode))
+
 (use-package
  evil-collection
  :after evil
  :config
  (setq evil-collection-mode-list '(dashboard dired ibuffer neotree magit))
  (evil-collection-init))
+
 (use-package evil-tutor)
 
-;; (global-unset-key (kbd "K") nil)
 (use-package general
   :config
   (general-evil-setup)
@@ -95,10 +92,10 @@
   ;;(define-key evil-insert-state-map (kbd "jj") 'evil-normal-state) ;; turn off which key for this combo
   ;;(define-key evil-visual-state-map (kbd "jj") 'evil-normal-state)
   ;;(define-key evil-visual-state-map (kbd "J") (lambda (interactive) (call-interactively evil-ex ))) ;; it removes lines it doesnt move nothin
-  (define-key evil-visual-state-map (kbd "SPCj") 'evil-ex "m >+1<CR>gv=gv")
-  (define-key evil-visual-state-map (kbd "SPCk") 'evil-ex "m <-2<CR>gv=gv") ;; it exits visual mode that why it has problems
-  (leader-key 
-    "s" '(lambda () (interactive) (evil-ex "%s/find/replace/gI")))
+  ;; (define-key evil-visual-state-map (kbd "SPCj") 'evil-ex "m >+1<CR>gv=gv")
+  ;; (define-key evil-visual-state-map (kbd "SPCk") 'evil-ex "m <-2<CR>gv=gv") ;; it exits visual mode that why it has problems
+  ;; (leader-key 
+  ;;   "s" '(lambda () (interactive) (evil-ex "%s/find/replace/gI")))
 
   (leader-key
     "b" '(:ignore t :wk "Buffer")
@@ -110,10 +107,13 @@
     "br" '(revert-buffer :wk "Reload buffer"))
 
   (leader-key
-    "d" '(:ignore t :wk "Dired")
+    "d" '(:ingore t :wk "Dired/Dashboard")
+    "dr" '(dashboard-refresh-buffer :wk "Refresh dashboard")
+    ;; dired
     "dd" '(dired :wk "Open dired")
     "dj" '(dired-jump :wk "Dired jump to current")
     "do" '(dired-open-with :wk "Dired jump to current")
+    "dp" '(dired-preview-mode :wk "Dired jump to current")
     "dn" '(neotree-dir :wk "Open directory in neotree"))
 
   (leader-key
@@ -204,13 +204,16 @@
     "mv" '(multi-vterm :wk "Launch a vterm instance"))
 
   (leader-key
-    "y" '(:ignore t :wk "GTD")
-    "yf" '((lambda () (interactive) (cd "~/Notes/GTD") (call-interactively 'find-file)) :wk "Find GTD files")
-    "yr" '(org-refile :wk "Refile a file into GTD directory") ;; C-c C-w
-    "yc" '(org-capture :wk "Capture an idea")
-    "yi" '((lambda () (interactive) (org-capture nil "i")) :wk "Capture an idea directly into ur inbox")
-    "yt" '(org-ctrl-c-ctrl-c :wk "Set tags for an entry") ;; C-c C-c  for tags
-    "yg" '((lambda () (interactive) (org-agenda nil "g")) :wk "View the GTD view in agendas directly"))
+    "g" '(:ingore t :wk "Git/GTD")
+    "gs" '(magit-status :wk "Magit status")
+    "gt" '(git-timemachine:wk "Git time machine")
+   ;; GTD
+    "gf" '((lambda () (interactive) (cd "~/Notes/GTD") (call-interactively 'find-file)) :wk "Find GTD files")
+    "gr" '(org-refile :wk "Refile a file into GTD directory") ;; C-c C-w
+    "gc" '(org-capture :wk "Capture an idea")
+    "gi" '((lambda () (interactive) (org-capture nil "i")) :wk "Capture an idea directly into ur inbox")
+    "gt" '(org-ctrl-c-ctrl-c :wk "Set tags for an entry") ;; C-c C-c  for tags
+    "gg" '((lambda () (interactive) (org-agenda nil "g")) :wk "View the GTD view in agendas directly"))
 
   (leader-key 
     "n" '(:ignore t :wk "Org Roam")
@@ -224,15 +227,6 @@
     "nr" '(org-roam-node-random :wk "Open a random note")
     "nt" '(org-roam-tag-add :wk "Add a tag to a node")
     "na" '(org-roam-alias-add :wk "Create an alias for a note"))
-
-  (leader-key
-    "x" '(:ingore t :wk "Dashboard")
-    "xr" '(dashboard-refresh-buffer :wk "Refresh dashboard"))
-
-  (leader-key
-    "g" '(:ingore t :wk "Use git")
-    "gs" '(magit-status :wk "Magit status")
-    "gt" '(git-timemachine:wk "Git time machine"))
 
   (leader-key
     "p" '(projectile-command-map :wk "Projectile")))
@@ -335,14 +329,16 @@ one, an error is signaled."
  :diminish
  :hook (company-mode . company-box-mode))
 
-(use-package dired-open-with)
+(use-package dired-open-with :after dired)
 
 (use-package dired-preview
-  :after dired
+  :ensure t
+  :defer t
   :config
+     (setq dired-preview-delay 0.3)
      (evil-define-key 'normal dired-mode-map (kbd "h") 'dired-up-directory)
-     (evil-define-key 'normal dired-mode-map (kbd "l") (kbd "RET") )
-)
+     (evil-define-key 'normal dired-mode-map (kbd "l") (kbd "RET"))
+     (dired-preview-mode))
 
 (use-package doom-modeline
   :ensure t
@@ -636,7 +632,7 @@ one, an error is signaled."
          (agenda . "a")
          (registers . "e")))
  :custom
- (dashboard-footer-messages '("From freedom came elegance!" "Where there is a shell, there is a way" "There's no place like 127.0.0.1" "Free as in freedom" "If you can read this, Xorg is still working" "Powered by Gentoo" "Powered by GNU/Linux" "u like regex.. dont u?" "Richard Stallman is proud of you" "“Talk is cheap. Show me the code.” \n         - Linus Torvalds" "“Well, what is a computer? A computer is a universal machine.” \n                       - Richard Stallman" "UNIX! Live Free or Die" "Linux is user friendly. It's just very picky about who its friends are." " “Intelligence is the ability to avoid doing work, yet getting the work done.” \n                               - Linus Torvalds" "Monolithic Multipurpose Xenodochial Xsystem" "Keep it simple, stupid!" "the quieter you become, the more you are able to hear" "Designed for GNU/Linux" "Certified for Microsoft© Windows™" "Certified for Windows Vista™" "Compatible with Windows®7" "Works with Windows Vista™" "Microsoft© Windows™ Capable" "Emacs is written in Lisp, which is the only computer language that is beautiful" "I showed you my source code, plz respond" "Configured by mpetco"))
+ (dashboard-footer-messages '("From freedom came elegance!" "Where there is a shell, there is a way" "There's no place like 127.0.0.1" "Free as in freedom" "If you can read this, Xorg is still working" "Powered by Gentoo" "Powered by GNU/Linux" "u like regex.. dont u?" "Richard Stallman is proud of you" "“Talk is cheap. Show me the code.” \n         - Linus Torvalds" "“Well, what is a computer? A computer is a universal machine.” \n                       - Richard Stallman" "UNIX! Live Free or Die" "Linux is user friendly. It's just very picky about who its friends are." " “Intelligence is the ability to avoid doing work, yet getting the work done.” \n                               - Linus Torvalds" "Monolithic Multipurpose Xenodochial Xsystem" "Keep it simple, stupid!" "the quieter you become, the more you are able to hear" "Designed for GNU/Linux" "Certified for Microsoft© Windows™" "Certified for Windows Vista™" "Compatible with Windows®7" "Works with Windows Vista™" "Microsoft© Windows™ Capable" "Emacs is written in Lisp, which is the only computer language that is beautiful" "I showed you my source code, plz respond" "Configured by mpetco" "8MBs and constantly swapping" "a great operating system, lacking only a decent editor"))
  (dashboard-footer-icon nil)
  (dashboard-modify-heading-icons
   '((recents . "file-text") (bookmarks . "book")))
@@ -852,7 +848,7 @@ See also `org-save-all-org-buffers'"
 
 (use-package auctex)
 
-(use-package lsp-mode :custom (lsp-idle-delay 0.1)) ;;clangd is fast
+(use-package lsp-mode :custom (lsp-idle-delay 0.1) :config '(lsp-session-file "/home/martin/.cache/.lsp-session-v1")) ;;clangd is fast :hook
 (add-hook 'c-mode-hook 'lsp)
 (add-hook 'c++-mode-hook 'lsp)
 (add-hook 'python-mode-hook 'lsp)
@@ -880,7 +876,6 @@ See also `org-save-all-org-buffers'"
 (add-hook 'c-mode-hook #'(lambda () (hs-minor-mode 1)))
 
 (use-package neotree
-
   :config
   (setq neo-smart-open t
         neo-theme "ascii"
@@ -1026,7 +1021,7 @@ See also `org-save-all-org-buffers'"
 	(evil-define-key 'normal vterm-mode-map (kbd "o")        #'evil-insert-resume)
 	(evil-define-key 'normal vterm-mode-map (kbd "<return>") #'evil-insert-resume))
 
-(use-package yasnippet-snippets :custom (yas-global-mode t))
+(use-package yasnippet-snippets :custom (yas-global-mode t)) ;;after cpp stuff loads
 
 (use-package treemacs :custom (lsp-treemacs-sync-mode 1))
 (use-package treemacs-evil)
@@ -1037,7 +1032,11 @@ See also `org-save-all-org-buffers'"
  :diminish
  :hook ((org-mode prog-mode) . rainbow-mode))
 
-(use-package projectile :config (projectile-mode 1)) ;;(projectile-cache-file "/home/martin/.cache/projectile.cache"))
+(use-package
+ projectile
+ :config
+ (projectile-mode 1)
+ '(projectile-cache-file "/home/martin/.cache/projectile.cache"))
 
 (use-package transient)
 
