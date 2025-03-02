@@ -1,237 +1,7 @@
-(defvar elpaca-installer-version 0.9)
-(defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
-(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
-(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
-(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-                              :ref nil :depth 1 :inherit ignore
-                              :files (:defaults "elpaca-test.el" (:exclude "extensions"))
-                              :build (:not elpaca--activate-package)))
-(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
-       (build (expand-file-name "elpaca/" elpaca-builds-directory))
-       (order (cdr elpaca-order))
-       (default-directory repo))
-  (add-to-list 'load-path (if (file-exists-p build) build repo))
-  (unless (file-exists-p repo)
-    (make-directory repo t)
-    (when (< emacs-major-version 28) (require 'subr-x))
-    (condition-case-unless-debug err
-        (if-let* ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
-                  ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
-                                                  ,@(when-let* ((depth (plist-get order :depth)))
-                                                      (list (format "--depth=%d" depth) "--no-single-branch"))
-                                                  ,(plist-get order :repo) ,repo))))
-                  ((zerop (call-process "git" nil buffer t "checkout"
-                                        (or (plist-get order :ref) "--"))))
-                  (emacs (concat invocation-directory invocation-name))
-                  ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
-                                        "--eval" "(byte-recompile-directory \".\" 0 'force)")))
-                  ((require 'elpaca))
-                  ((elpaca-generate-autoloads "elpaca" repo)))
-            (progn (message "%s" (buffer-string)) (kill-buffer buffer))
-          (error "%s" (with-current-buffer buffer (buffer-string))))
-      ((error) (warn "%s" err) (delete-directory repo 'recursive))))
-  (unless (require 'elpaca-autoloads nil t)
-    (require 'elpaca)
-    (elpaca-generate-autoloads "elpaca" repo)
-    (load "./elpaca-autoloads")))
-(add-hook 'after-init-hook #'elpaca-process-queues)
-(elpaca `(,@elpaca-order))
+(add-to-list 'load-path "~/.config/emacs/scripts/")
 
-;; install use-package support
-(elpaca elpaca-use-package
-  ;; Enable use-package :ensure support for Elpaca.
-  (elpaca-use-package-mode))
-
-;; Assume :elpaca t unless otherwise specified
-(setq use-package-always-ensure t)
-
-;;When installing a package used in the init file itself,
-;;e.g. a package which adds a use-package key word,
-;;use the :wait recipe keyword to block until that package is installed/configured.
-;;For example:
-;; (use-package general :ensure (:wait t) :demand t)
-
-;;Turns off elpaca-use-package-mode current declaration
-;;Note this will cause evaluate the declaration immediately. It is not deferred.
-;;Useful for configuring built-in emacs features.
-(use-package emacs :ensure nil :config (setq ring-bell-function #'ignore))
-
-(use-package
- evil
- :init ;; tweak evil's configuration before loading it
- (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
- (setq evil-want-keybinding nil)
- (setq evil-vsplit-window-right t)
- (setq evil-split-window-below t)
- (setq evil-undo-system 'undo-fu)
- (setq evil-want-C-u-scroll t)
- (evil-mode))
-
-(use-package
- evil-collection
- :after evil
- :config
- (setq evil-collection-mode-list '(dashboard dired ibuffer neotree magit))
- (evil-collection-init))
-
-(use-package evil-tutor)
-
-(use-package general
-  :config
-  (general-evil-setup)
-
-  ;; set up 'SPC' as the global leader key
-  (general-create-definer leader-key
-    :states '(normal insert visual emacs)
-    :keymaps 'override
-    :prefix "SPC" ;; set leader
-    :global-prefix "M-SPC") ;; access leader in insert mode
-
-  ;; imported from my neovim config
-  ;; the move one with c J K
-  ;;(define-key evil-insert-state-map (kbd "jj") 'evil-normal-state) ;; turn off which key for this combo
-  ;;(define-key evil-visual-state-map (kbd "jj") 'evil-normal-state)
-  ;;(define-key evil-visual-state-map (kbd "J") (lambda (interactive) (call-interactively evil-ex ))) ;; it removes lines it doesnt move nothin
-  ;; (define-key evil-visual-state-map (kbd "SPCj") 'evil-ex "m >+1<CR>gv=gv")
-  ;; (define-key evil-visual-state-map (kbd "SPCk") 'evil-ex "m <-2<CR>gv=gv") ;; it exits visual mode that why it has problems
-  ;; (leader-key 
-  ;;   "s" '(lambda () (interactive) (evil-ex "%s/find/replace/gI")))
-
-  (leader-key
-    "b" '(:ignore t :wk "Buffer")
-    "bb" '(switch-to-buffer :wk "Switch buffer")
-    "bk" '(kill-this-buffer :wk "Kill this buffer")
-    "bi" '(ibuffer :wk "Ibuffer") ;; ig this is like panes? in tmux
-    "bn" '(next-buffer :wk "Next buffer")
-    "bp" '(previous-buffer :wk "Previous buffer")
-    "br" '(revert-buffer :wk "Reload buffer"))
-
-  (leader-key
-    "d" '(:ingore t :wk "Dired/Dashboard")
-    "dr" '(dashboard-refresh-buffer :wk "Refresh dashboard")
-    ;; dired
-    "dd" '(dired :wk "Open dired")
-    "dj" '(dired-jump :wk "Dired jump to current")
-    "do" '(dired-open-with :wk "Dired jump to current")
-    "dp" '(dired-preview-mode :wk "Dired jump to current")
-    "dn" '(neotree-dir :wk "Open directory in neotree"))
-
-  (leader-key
-    "e" '(:ignore t :wk "Eshell/Evaluate")    ;; not a command but a which key description
-    "eb" '(eval-buffer :wk "Evaluate elisp in buffer")
-    "ed" '(eval-defun :wk "Evaluate defun containing or after point")
-    "ee" '(eval-expression :wk "Evaluate and elisp expression")
-    "ef" '(indent-pp-sexp :wk "Formate some elisp code")
-    "eh" '(counsel-esh-history :which-key "Eshell history")
-    "el" '(eval-last-sexp :wk "Evaluate elisp expression before point")
-    "er" '(eval-region :wk "Evaluate elisp in region")
-    "es" '(eshell :which-key "Eshell"))
-
-  (leader-key
-    "SPC" '(counsel-M-x :wk "Counsel M-x")
-    "." '(find-file :wk "Find file") ;; make this more like the one in neovim
-    "fr" '(counsel-recentf :wk "Find recent files") ;; also fr h is a neovimism
-    "fc" '((lambda () (interactive) (find-file "~/.config/emacs/config.org")) :wk "Edit emacs config")
-    "h" '(:ignore t :wk "Help")
-    "hf" '(describe-function :wk "Describe function")
-    "hv" '(describe-variable :wk "Describe variable")
-    "hk" '(describe-key :wk "Describe a key")
-    "hrr" '((lambda () (interactive) (load-file "~/.config/emacs/init.el")) :wk "Reload config")
-    "TAB TAB" '(comment-line :wk "Comment lines they have to be in visual mode selected tho"))
-
-  (leader-key
-    "t" '(:ignore t :wk "Toggle")
-    "tl" '(display-line-numbers-mode :wk "Toggle line numbers")
-    "tn" '(neotree-toggle :wk "Toggle neotree file viewer")
-    "tt" '(visual-line-mode :wk "Toggle truncated lines")
-    "tu" '(vundo :wk "Toggle vundo tree")
-    "tv" '(vterm-toggle :wk "Toggle vterm"))
-
-  (leader-key
-    "f" '(:ignore t :wk "Format")
-    "fe" '(:ignore t :wk "Format Elisp")
-    "feb" '(elisp-autofmt-buffer :wk "Format the entire buffer")
-    "fer" '(elisp-autofmt-region :wk "Format the selected text")
-    "fl"  '(:ignore :wk "Lsp format")
-    "flr"  '(lsp-format-region :wk "Format region")
-    "flb"  '(lsp-format-buffer :wk "Format buffer"))
-
-  (leader-key
-    "w" '(:ignore t :wk "Windows")
-    ;; Window splits
-    "wc" '(evil-window-delete :wk "Close window")
-    "wn" '(evil-window-new :wk "New window")
-    "w-" '(evil-window-split :wk "Horizontal split window")
-    "w\\" '(evil-window-vsplit :wk "Vertical split window")
-    ;; Window motions
-    "wh" '(evil-window-left :wk "Window left")
-    "wj" '(evil-window-down :wk "Window down")
-    "wk" '(evil-window-up :wk "Window up")
-    "wl" '(evil-window-right :wk "Window right")
-    "ww" '(evil-window-next :wk "Goto next window")
-    ;; Move Windows
-    "wH" '(buf-move-left :wk "Buffer move left")
-    "wJ" '(buf-move-down :wk "Buffer move down")
-    "wK" '(buf-move-up :wk "Buffer move up")
-    "wL" '(buf-move-right :wk "Buffer move right"))
-
-  (leader-key
-    "m" '(:ignore t :wk "Org")
-    "ma" '(org-agenda :wk "Org agenda")
-    "me" '(org-export-dispatch :wk "Org export dispatch")
-    "mi" '(org-toggle-item :wk "Org toggle item")
-    "mt" '(org-todo :wk "Org todo") ;; C-c C-t for the state of the entry
-    "mB" '(org-babel-tangle :wk "Org babel tangle")
-    "mT" '(org-todo-list :wk "Org todo list")
-    "mc" '(org-toggle-checkbox :wk "Toggle between the states of a checkbox")
-    "mps" '(org-timer-set-timer :wk "Set a timer using org")
-    "mpe" '(org-timer-stop :wk "End a timer")
-    "mpp" '(org-timer-pause-or-continue :wk "Pause a timer")
-    "ms" '(org-schedule :wk "Set an org schedule"))
-  ;;C-c ! inactive timestamp
-  ;;C-c . Plain timestamp
-
-  (leader-key
-    "mb" '(:ignore t :wk "Tables")
-    "mb-" '(org-table-insert-hline :wk "Insert hline in table"))
-
-  (leader-key
-    "md" '(:ignore t :wk "Date/deadline")
-    "mdd" '(org-deadline :wk "Org deadline")
-    "mdt" '(org-time-stamp :wk "Org time stamp"))
-
-  (leader-key 
-    "mv" '(multi-vterm :wk "Launch a vterm instance"))
-
-  (leader-key
-    "g" '(:ingore t :wk "Git/GTD")
-    "gs" '(magit-status :wk "Magit status")
-    "gt" '(git-timemachine:wk "Git time machine")
-   ;; GTD
-    "gf" '((lambda () (interactive) (cd "~/Notes/GTD") (call-interactively 'find-file)) :wk "Find GTD files")
-    "gr" '(org-refile :wk "Refile a file into GTD directory") ;; C-c C-w
-    "gc" '(org-capture :wk "Capture an idea")
-    "gi" '((lambda () (interactive) (org-capture nil "i")) :wk "Capture an idea directly into ur inbox")
-    "gt" '(org-ctrl-c-ctrl-c :wk "Set tags for an entry") ;; C-c C-c  for tags
-    "gg" '((lambda () (interactive) (org-agenda nil "g")) :wk "View the GTD view in agendas directly"))
-
-  (leader-key 
-    "n" '(:ignore t :wk "Org Roam")
-    "nl" '(org-roam-buffer-toggle :wk "View all files linking to this file")
-    "nf" '(org-roam-node-find :wk "Find notes")
-    "ng"  '(org-roam-graph :wk "Show a graph of all of yours nodes")
-    "ni"  '(org-roam-node-insert :wk "Insert a link to another node")
-    "nc"  '(org-roam-capture :wk "Capturea note into your personal wiki")
-    "nj" '(org-roam-dailies-capture-today :wk "Org roam dailies")
-    "nh" '(org-id-get-create :wk "Create a heading note")
-    "nr" '(org-roam-node-random :wk "Open a random note")
-    "nt" '(org-roam-tag-add :wk "Add a tag to a node")
-    "na" '(org-roam-alias-add :wk "Create an alias for a note"))
-
-  (leader-key
-    "p" '(projectile-command-map :wk "Projectile")))
-
-;; (define-key global-map (kbd "C-.") 'company-files)
+(require 'elpaca-setup)  ;; The Elpaca Package Manager
+(require 'buffer-move)   ;; Buffer-move for better window managment
 
 (use-package all-the-icons :ensure t :if (display-graphic-p))
 
@@ -239,106 +9,77 @@
  all-the-icons-dired
  :hook (dired-mode . (lambda () (all-the-icons-dired-mode t))))
 
-(require 'windmove)
-
-;;;###autoload
-(defun buf-move-up ()
-  "Swap the current buffer and the buffer above the split.
-If there is no split, ie now window above the current one, an
-error is signaled."
-  ;;  "Switches between the current buffer, and the buffer above the
-  ;;  split, if possible."
-  (interactive)
-  (let* ((other-win (windmove-find-other-window 'up))
-         (buf-this-buf (window-buffer (selected-window))))
-    (if (null other-win)
-        (error "No window above this one")
-      ;; swap top with this one
-      (set-window-buffer (selected-window) (window-buffer other-win))
-      ;; move this one to top
-      (set-window-buffer other-win buf-this-buf)
-      (select-window other-win))))
-
-;;;###autoload
-(defun buf-move-down ()
-  "Swap the current buffer and the buffer under the split.
-If there is no split, ie now window under the current one, an
-error is signaled."
-  (interactive)
-  (let* ((other-win (windmove-find-other-window 'down))
-         (buf-this-buf (window-buffer (selected-window))))
-    (if (or (null other-win)
-            (string-match
-             "^ \\*Minibuf" (buffer-name (window-buffer other-win))))
-        (error "No window under this one")
-      ;; swap top with this one
-      (set-window-buffer (selected-window) (window-buffer other-win))
-      ;; move this one to top
-      (set-window-buffer other-win buf-this-buf)
-      (select-window other-win))))
-
-;;;###autoload
-(defun buf-move-left ()
-  "Swap the current buffer and the buffer on the left of the split.
-If there is no split, ie now window on the left of the current
-one, an error is signaled."
-  (interactive)
-  (let* ((other-win (windmove-find-other-window 'left))
-         (buf-this-buf (window-buffer (selected-window))))
-    (if (null other-win)
-        (error "No left split")
-      ;; swap top with this one
-      (set-window-buffer (selected-window) (window-buffer other-win))
-      ;; move this one to top
-      (set-window-buffer other-win buf-this-buf)
-      (select-window other-win))))
-
-;;;###autoload
-(defun buf-move-right ()
-  "Swap the current buffer and the buffer on the right of the split.
-If there is no split, ie now window on the right of the current
-one, an error is signaled."
-  (interactive)
-  (let* ((other-win (windmove-find-other-window 'right))
-         (buf-this-buf (window-buffer (selected-window))))
-    (if (null other-win)
-        (error "No right split")
-      ;; swap top with this one
-      (set-window-buffer (selected-window) (window-buffer other-win))
-      ;; move this one to top
-      (set-window-buffer other-win buf-this-buf)
-      (select-window other-win))))
+(use-package consult)
 
 (use-package
- company
- :defer 2
- :diminish
+ corfu
+ :ensure t
  :custom
- (company-begin-commands '(self-insert-command))
- (company-idle-delay .1)
- (company-minimum-prefix-length 2)
- (company-show-numbers t)
- (company-tooltip-align-annotations 't)
- (company-idle-delay 0.0)
- (company-minimum-prefix-length 1)
- (global-company-mode t))
+ (corfu-cycle t) ;; allow cycling through candidates
+ (corfu-auto t) ;; enable auto completion
+ (corfu-auto-prefix 1) ;; minimum length for auto completion
+ (corfu-auto-delay 0.0) ;; no delay might cause problems
+ (corfu-popupinfo-delay '(0.5 . 0.2)) ;; vscode-like popups
+ (corfu-echo-documentation t)
+ (corfu-preselect 'prompt) ;; always preselect the prompt
+ (corfu-on-exact-match nil) ;; Don't auto expand snippets
+ :config
+ (define-key corfu-map (kbd "C-k") (kbd "<up>"))
+ (define-key corfu-map (kbd "C-j") (kbd "<down>"))
+ ;; supertab-like behavior
+ :bind (:map corfu-map
+             ("M-SPC"      . corfu-insert-separator)
+             ("TAB"        . corfu-next)
+             ([tab]        . corfu-next)
+             ("S-TAB"      . corfu-previous)
+             ([backtab]    . corfu-previous)
+             ("S-<return>" . corfu-insert)
+             ("RET"        . corfu-insert))
+ :init
+ (global-corfu-mode)
+ (corfu-history-mode)
+ (corfu-popupinfo-mode))
 
 (use-package
- company-box
- :after company
- :diminish
- :hook (company-mode . company-box-mode))
+ nerd-icons-corfu
+ :config (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
 
-(use-package dired-open-with :after dired)
+(use-package corfu-terminal)
 
-(use-package dired-preview
-  :ensure t
-  :defer t
-  :config
-     (setq dired-preview-delay 0.3)
-     (evil-define-key 'normal dired-mode-map (kbd "h") 'dired-up-directory)
-     (evil-define-key 'normal dired-mode-map (kbd "l") (kbd "RET"))
-     (dired-preview-mode))
+(use-package
+ cape
+ :ensure t
+ :defer 10
+ :init
+ (add-hook 'completion-at-point-functions #'cape-file) ;; you can complete files /bin/
+ (add-hook 'completion-at-point-functions #'cape-dabbrev) ;; dabbrev pretty cool
+ (add-hook 'completion-at-point-functions #'cape-dict) ;; dabbrev pretty cool
+ (add-hook 'completion-at-point-functions #'yasnippet-capf) ;; yasnippets
+ (add-hook 'completion-at-point-functions #'cape-elisp-block)
+
+(defun my/eglot-capf ()
+  (setq-local completion-at-point-functions
+              (list (cape-capf-super
+                     #'eglot-completion-at-point
+                     #'yasnippet-capf))))
+;; make functions by language so you can enable dabbrev for tex
+;; make yasnippets load sepperately form everything else
+
+(add-hook 'eglot-managed-mode-hook #'my/eglot-capf)
+)
+
+(use-package dired-open-with :defer t :ensure t)
+;;(defun dpautoload-function () (message "test")) the functions has to be actually defined fyi
+
+(use-package
+ dired-preview
+ :ensure t
+ :defer t
+ :commands dired-preview-mode
+ :init (add-hook 'dired-mode-hook 'dired-preview-mode)
+ :config (setq dired-preview-delay 0.3)
+ (evil-define-key 'normal dired-mode-map (kbd "h") 'dired-up-directory)
+ (evil-define-key 'normal dired-mode-map (kbd "l") (kbd "RET")))
 
 (use-package doom-modeline
   :ensure t
@@ -478,7 +219,7 @@ one, an error is signaled."
   (doom-modeline-continuous-word-count-modes '(markdown-mode gfm-mode org-mode))
 
   ;; Whether display the buffer encoding.
-  (doom-modeline-buffer-encoding t)
+  (doom-modeline-buffer-encoding nil)
 
   ;; Whether display the indentation information.
   (doom-modeline-indent-info nil)
@@ -632,7 +373,7 @@ one, an error is signaled."
          (agenda . "a")
          (registers . "e")))
  :custom
- (dashboard-footer-messages '("From freedom came elegance!" "Where there is a shell, there is a way" "There's no place like 127.0.0.1" "Free as in freedom" "If you can read this, Xorg is still working" "Powered by Gentoo" "Powered by GNU/Linux" "u like regex.. dont u?" "Richard Stallman is proud of you" "“Talk is cheap. Show me the code.” \n         - Linus Torvalds" "“Well, what is a computer? A computer is a universal machine.” \n                       - Richard Stallman" "UNIX! Live Free or Die" "Linux is user friendly. It's just very picky about who its friends are." " “Intelligence is the ability to avoid doing work, yet getting the work done.” \n                               - Linus Torvalds" "Monolithic Multipurpose Xenodochial Xsystem" "Keep it simple, stupid!" "the quieter you become, the more you are able to hear" "Designed for GNU/Linux" "Certified for Microsoft© Windows™" "Certified for Windows Vista™" "Compatible with Windows®7" "Works with Windows Vista™" "Microsoft© Windows™ Capable" "Emacs is written in Lisp, which is the only computer language that is beautiful" "I showed you my source code, plz respond" "Configured by mpetco" "8MBs and constantly swapping" "a great operating system, lacking only a decent editor"))
+ (dashboard-footer-messages '("From freedom came elegance!" "Where there is a shell, there is a way" "There's no place like 127.0.0.1" "Free as in freedom" "If you can read this, Xorg is still working" "Powered by Gentoo" "Powered by GNU/Linux" "u like regex.. dont u?" "Richard Stallman is proud of you" "“Talk is cheap. Show me the code.” \n         - Linus Torvalds" "“Well, what is a computer? A computer is a universal machine.” \n                       - Richard Stallman" "UNIX! Live Free or Die" "Linux is user friendly. It's just very picky about who its friends are." " “Intelligence is the ability to avoid doing work, yet getting the work done.” \n                               - Linus Torvalds" "Monolithic Multipurpose Xenodochial Xsystem" "Keep it simple, stupid!" "the quieter you become, the more you are able to hear" "Designed for GNU/Linux" "Certified for Microsoft© Windows™" "Certified for Windows Vista™" "Compatible with Windows®7" "Works with Windows Vista™" "Microsoft© Windows™ Capable" "Emacs is written in Lisp, which is the only computer language that is beautiful" "I showed you my source code, plz respond" "Configured by mpetco" "8MBs and constantly swapping" "a great operating system, lacking only a decent editor" "Eight Megabytes and Constantly Swapping" "Escape Meta Alt Control Shift" "EMACS Makes Any Computer Slow" "Eventually Munches All Computer Storage" "Generally Not Used, Except by Middle-Aged Computer Scientists" "How do you generate a random string? \nPut a web designer in front of vim" "Vim is the leading cause of arthritis" "Given enough eyeballs all bugs are shallow"))
  (dashboard-footer-icon nil)
  (dashboard-modify-heading-icons
   '((recents . "file-text") (bookmarks . "book")))
@@ -643,6 +384,56 @@ one, an error is signaled."
  (dashboard-setup-startup-hook))
 
 (use-package diminish)
+
+(use-package ellama
+  :ensure t
+  :bind ("C-c e" . ellama-transient-main-menu)
+  ;; send last message in chat buffer with C-c C-c
+  :hook (org-ctrl-c-ctrl-c-final . ellama-chat-send-last-message)
+  :init (setopt ellama-auto-scroll t)
+  :config
+  ;; show ellama context in header line in all buffers
+  (ellama-context-header-line-global-mode +1))
+
+(use-package
+ eglot
+ :ensure t
+ :config
+ (add-to-list 'eglot-server-programs '(c-mode . ("clangd")))
+ (add-to-list 'eglot-server-programs '(c++-mode . ("clangd")))
+ (add-to-list 'eglot-server-programs '(latex-mode . ("texlab")))
+ (add-hook 'c-mode-hook 'eglot-ensure)
+ (add-hook 'c++-mode-hook 'eglot-ensure)
+ (add-hook 'latex-mode-hook 'eglot-ensure)
+ ;; this fixes a bug, https://github.com/joaotavora/eglot/discussions/1127 https://www.reddit.com/r/emacs/comments/175moy8/eglot_gets_out_of_sync_from_the_buffer_and/
+ (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
+ (advice-add 'eglot-completion-at-point :around #'cape-wrap-noninterruptible))
+
+(use-package jsonrpc)
+
+(use-package
+ evil
+ :init ;; tweak evil's configuration before loading it
+ (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
+ (setq evil-want-keybinding nil)
+ (setq evil-vsplit-window-right t)
+ (setq evil-split-window-below t)
+ (setq evil-undo-system 'undo-fu)
+ (setq evil-want-C-u-scroll t)
+ (evil-mode))
+
+(use-package
+ evil-collection
+ :after evil
+ :config
+ (setq evil-collection-mode-list '(dashboard dired ibuffer neotree magit vundo doc-view help elpaca package-menu buff-menu imenu buffer apropos cmake-mode snake tetris vterm vertico corfu))
+ (evil-collection-init))
+
+(use-package evil-tutor)
+
+(use-package embark)
+
+(use-package embark-consult)
 
 (use-package elisp-autofmt
      :config 
@@ -688,6 +479,168 @@ one, an error is signaled."
 (global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
 (global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
 
+(use-package general
+  :config
+  (general-evil-setup)
+
+  ;; set up 'SPC' as the global leader key
+  (general-create-definer leader-key
+    :states '(normal insert visual emacs)
+    :keymaps 'override
+    :prefix "SPC" ;; set leader
+    :global-prefix "M-SPC") ;; access leader in insert mode
+
+  ;; imported from my neovim config
+  ;; the move one with c J K
+  ;;(define-key evil-insert-state-map (kbd "jj") 'evil-normal-state) ;; turn off which key for this combo
+  ;;(define-key evil-visual-state-map (kbd "jj") 'evil-normal-state)
+  ;;(define-key evil-visual-state-map (kbd "J") (lambda (interactive) (call-interactively evil-ex ))) ;; it removes lines it doesnt move nothin
+  ;; (define-key evil-visual-state-map (kbd "SPCj") 'evil-ex "m >+1<CR>gv=gv")
+  ;; (define-key evil-visual-state-map (kbd "SPCk") 'evil-ex "m <-2<CR>gv=gv") ;; it exits visual mode that why it has problems
+  ;; (leader-key 
+  ;;   "s" '(lambda () (interactive) (evil-ex "%s/find/replace/gI")))
+
+  (leader-key
+    "b" '(:ignore t :wk "Buffer")
+    "bb" '(switch-to-buffer :wk "Switch buffer")
+    "bk" '(kill-this-buffer :wk "Kill this buffer")
+    "bi" '(ibuffer :wk "Ibuffer") ;; ig this is like panes? in tmux
+    "bn" '(next-buffer :wk "Next buffer")
+    "bp" '(previous-buffer :wk "Previous buffer")
+    "br" '(revert-buffer :wk "Reload buffer"))
+
+  (leader-key
+    "d" '(:ingore t :wk "Dired/Dashboard")
+    "dr" '(dashboard-refresh-buffer :wk "Refresh dashboard")
+    ;; dired
+    "dd" '(dired :wk "Open dired")
+    "dj" '(dired-jump :wk "Dired jump to current")
+    "do" '(dired-open-with :wk "Dired jump to current")
+    "dp" '(dired-preview-mode :wk "Dired jump to current")
+    "dn" '(neotree-dir :wk "Open directory in neotree"))
+
+  (leader-key
+    "e" '(:ignore t :wk "Eshell/Evaluate")    ;; not a command but a which key description
+    "eb" '(eval-buffer :wk "Evaluate elisp in buffer")
+    "ed" '(eval-defun :wk "Evaluate defun containing or after point")
+    "ee" '(eval-expression :wk "Evaluate and elisp expression")
+    "ef" '(indent-pp-sexp :wk "Formate some elisp code")
+    "eh" '(counsel-esh-history :which-key "Eshell history")
+    "el" '(eval-last-sexp :wk "Evaluate elisp expression before point")
+    "er" '(eval-region :wk "Evaluate elisp in region")
+    "es" '(eshell :which-key "Eshell"))
+
+  (leader-key
+    "SPC" '(execute-extended-command :wk "M-x")
+    "." '(find-file :wk "Find file") ;; make this more like the one in neovim
+    "fr" '(counsel-recentf :wk "Find recent files") ;; also fr h is a neovimism
+    "fc" '((lambda () (interactive) (find-file "~/.config/emacs/config.org")) :wk "Edit emacs config")
+    "h" '(:ignore t :wk "Help")
+    "hf" '(describe-function :wk "Describe function")
+    "hv" '(describe-variable :wk "Describe variable")
+    "hk" '(describe-key :wk "Describe a key")
+    "hrr" '((lambda () (interactive) (load-file "~/.config/emacs/init.el")) :wk "Reload config")
+    "TAB TAB" '(comment-line :wk "Comment lines they have to be in visual mode selected tho"))
+
+  (leader-key
+    "t" '(:ignore t :wk "Toggle")
+    "tl" '(display-line-numbers-mode :wk "Toggle line numbers")
+    "tn" '(neotree-toggle :wk "Toggle neotree file viewer")
+    "tt" '(visual-line-mode :wk "Toggle truncated lines")
+    "tu" '(vundo :wk "Toggle vundo tree")
+    "tv" '(vterm-toggle :wk "Toggle vterm"))
+
+  (leader-key
+    "f" '(:ignore t :wk "Format")
+    "fe" '(:ignore t :wk "Format Elisp")
+    "feb" '(elisp-autofmt-buffer :wk "Format the entire buffer")
+    "fer" '(elisp-autofmt-region :wk "Format the selected text")
+    "fl"  '(:ignore t :wk "Lsp format")
+    "flr"  '(eglot-format :wk "Format region")
+    "flb"  '(eglot-format-buffer :wk "Format buffer"))
+
+  (leader-key
+    "w" '(:ignore t :wk "Windows")
+    ;; Window splits
+    "wc" '(evil-window-delete :wk "Close window")
+    "wn" '(evil-window-new :wk "New window")
+    "w-" '(evil-window-split :wk "Horizontal split window")
+    "w\\" '(evil-window-vsplit :wk "Vertical split window")
+    ;; Window motions
+    "wh" '(evil-window-left :wk "Window left")
+    "wj" '(evil-window-down :wk "Window down")
+    "wk" '(evil-window-up :wk "Window up")
+    "wl" '(evil-window-right :wk "Window right")
+    "ww" '(evil-window-next :wk "Goto next window")
+    ;; Move Windows
+    "wH" '(buf-move-left :wk "Buffer move left")
+    "wJ" '(buf-move-down :wk "Buffer move down")
+    "wK" '(buf-move-up :wk "Buffer move up")
+    "wL" '(buf-move-right :wk "Buffer move right"))
+
+  ;; put the gtd stuff and roam stuff in here
+  (leader-key
+    "m" '(:ignore t :wk "Org")
+    "ma" '(org-agenda :wk "Org agenda")
+    "me" '(org-export-dispatch :wk "Org export dispatch")
+    "mi" '(org-toggle-item :wk "Org toggle item")
+    "mt" '(org-todo :wk "Org todo") ;; C-c C-t for the state of the entry
+    "mB" '(org-babel-tangle :wk "Org babel tangle")
+    "mT" '(org-todo-list :wk "Org todo list")
+    "mc" '(org-toggle-checkbox :wk "Toggle between the states of a checkbox")
+    "mh" '(org-id-get-create :wk "Create a heading note")
+    "ms" '(org-schedule :wk "Set an org schedule")
+    "mo" '(org-open-at-point :wk "Open a link")
+    "ml" '(org-insert-link :wk "Insert a link")
+    "mf" '((lambda () (interactive) (cd "~/Notes/PersonalWiki/") (call-interactively 'find-file)) :wk "Find notes"))
+
+  (leader-key
+    "mg" '(:ignore t :wk "GTD")
+    "mgf" '((lambda () (interactive) (cd "~/Notes/GTD") (call-interactively 'find-file)) :wk "Find GTD files")
+    "mgr" '(org-refile :wk "Refile a file into GTD directory") ;; C-c C-w
+    "mgc" '(org-capture :wk "Capture an idea")
+    "mgi" '((lambda () (interactive) (org-capture nil "i")) :wk "Capture an idea directly into ur inbox")
+    "mgt" '(org-ctrl-c-ctrl-c :wk "Set tags for an entry") ;; C-c C-c  for tags
+    "mgg" '((lambda () (interactive) (org-agenda nil "g")) :wk "View the GTD view in agendas directly"))
+
+  (leader-key
+    "mp" '(:ignore t :wk "Org timer")
+    "mps" '(org-timer-set-timer :wk "Set a timer")
+    "mpe" '(org-timer-stop :wk "End a timer")
+    "mpp" '(org-timer-pause-or-continue :wk "Pause a timer"))
+  ;;C-c ! inactive timestamp
+  ;;C-c . Plain timestamp
+
+  (leader-key
+    "mb" '(:ignore t :wk "Tables")
+    ;; add the create table with options org table create with, org table create 
+    "mb-" '(org-table-insert-hline :wk "Insert hline in table"))
+
+  (leader-key
+    "md" '(:ignore t :wk "Date/deadline")
+    "mdd" '(org-deadline :wk "Org deadline")
+    "mdt" '(org-time-stamp :wk "Org time stamp"))
+
+  (leader-key 
+    "mv" '(multi-vterm :wk "Launch a vterm instance"))
+
+  (leader-key
+    "g" '(:ingore t :wk "Git")
+    "gs" '(magit-status :wk "Magit status")
+    "gt" '(git-timemachine:wk "Git time machine"))
+
+  ;;leader-key a leasiure, rss reader, browser, irc chat, steam launcher minecraft launcher
+  ;;(leader-key latexmk, and clean keybinding, and view keybinding
+  (leader-key
+    "l" '(:ingore t :wk "Latex")
+    "lc" '((lambda () (interactive) (shell-command (format "/usr/bin/pdflatex" (shell-quote-argument (buffer-file-name))) ) ) :wk "Latex compile") ;; make it grab the current string of the open tex file
+    "lv" '((lambda () (interactive) (dired buffer-file-name)) :wk "Latex view compiled"))
+
+  (leader-key
+    "p" '(projectile-command-map :wk "Projectile")))
+
+;; (define-key global-map (kbd "C-.") 'company-files)
+
 (use-package git-timemachine
   :after git-timemachine
   :hook (evil-normalize-keymaps . git-timemachine-hook)
@@ -702,12 +655,14 @@ one, an error is signaled."
  (vc-handled-backends nil)
  (magit-section-initial-visibility-alist '((untracked . show))))
 
+(use-package git-gutter :hook (prog-mode . git-gutter))
+
 (require 'org)
 ;; defining the files org-mode will look at
 (setq org-directory "~/Notes/GTD")
 ;; this does not add files to org-agenda use org-agenda-file-to-front, a fix is avilable this has to load after org-mode has loaded but i dont know the function that does that in non doom emacs
 ;; write a custom hook to load this after org-mode
-;; (setq org-agenda-files (list "inbox.org" "projects.org"))
+(setq org-agenda-files (list "inbox.org" "projects.org" "agenda.org")) ;; this still doesnt work
 ;; this bit works no problem
 (setq org-agenda-files
       (mapcar 'file-truename
@@ -810,67 +765,22 @@ See also `org-save-all-org-buffers'"
 (setq display-line-numbers-type 'relative)
 (global-visual-line-mode t)
 
-(use-package counsel :after ivy :diminish :config (counsel-mode))
+(add-hook 'LaTeX-mode-hook 'lsp)
+(setq TeX-parse-self t)
+;;(add-to-list 'auto-mode-alist '("\\.tex\\'" . 'lsp))
 
-(use-package
- ivy
- :diminish
- :bind
- ;; ivy-resume resumes the last Ivy-based completion.
- ;; rewrite these keybindings mkay
- (("C-c C-r" . ivy-resume) ("C-x B" . ivy-switch-buffer-other-window))
- :custom
- (setq ivy-use-virtual-buffers t)
- (setq ivy-count-format "(%d/%d) ")
- (setq enable-recursive-minibuffers t)
- :config (ivy-mode))
+;;(use-package auctex)
 
-(use-package
- all-the-icons-ivy-rich
- :ensure t
- :init (all-the-icons-ivy-rich-mode 1))
-
-(use-package
- ivy-rich
- :after ivy
- :ensure t
- :init (ivy-rich-mode 1) ;; this gets us descriptions in M-x.
- :custom
- (ivy-virtual-abbreviate
-  'full
-  ivy-rich-switch-buffer-align-virtual-buffer
-  t
-  ivy-rich-path-style
-  'abbrev)
- :config
- (ivy-set-display-transformer
-  'ivy-switch-buffer 'ivy-rich-switch-buffer-transformer))
-
-(use-package auctex)
-
-(use-package lsp-mode :custom (lsp-idle-delay 0.1) :config '(lsp-session-file "/home/martin/.cache/.lsp-session-v1")) ;;clangd is fast :hook
-(add-hook 'c-mode-hook 'lsp)
-(add-hook 'c++-mode-hook 'lsp)
-(add-hook 'python-mode-hook 'lsp)
-(add-hook 'java-mode-hook 'lsp)
-(add-hook 'rust-mode-hook 'lsp)
-(add-hook 'bash-mode-hook 'lsp)
-;; actual programming ^
-;; web dev
-;; some web dev stuff here html and css obavezno
-;; and ig some javascript frameworks cause i ought to know webdev = more employable
-;; react ofc that was the one that made you the most employable right?
-
-
-
-(use-package lsp-ivy)
-
-(use-package lsp-treemacs)
+(add-to-list 'auto-mode-alist '("\\.pdf\\'" . doc-view-mode))
 
 ;;(use-package lua-mode)
 ;;(use-package haskell-mode)
 
-;;(add-to-list 'auto-mode-alist '("\\.org\\'" . org-toggle-inline-images))
+;;(use-package nyan-mode)
+
+(use-package marginalia :ensure t :config (marginalia-mode))
+
+;;(add-to-list 'auto-mode-alist '("\\.org\\'" . org-display-inline-images))
 
 (add-hook 'c++-mode-hook #'(lambda () (hs-minor-mode 1)))
 (add-hook 'c-mode-hook #'(lambda () (hs-minor-mode 1)))
@@ -893,6 +803,13 @@ See also `org-save-all-org-buffers'"
                  (make-local-variable 'auto-hscroll-mode)
                  (setq auto-hscroll-mode nil)))))
 
+(use-package orderless
+  :ensure t
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-defaults nil)
+  (completion-category-overrides '((file (styles basic partial-completion)))))
+
 (use-package
  toc-org
  :commands toc-org-enable
@@ -912,23 +829,7 @@ See also `org-save-all-org-buffers'"
 
 (setq org-hide-emphasis-markers t)
 
-(use-package
-  org-roam
-  :ensure t
-  :after org
-  :custom
-  (org-roam-directory (file-truename "~/Notes/PersonalWiki/"))
-  (org-roam-completion-everywhere t)
-  (org-roam-capture-templates
-   '(("d" "default" plain "%?"
-    :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+date: %u\n#+lastmod: \n\n")
-    :unnarrowed t)) 
-    time-stamp-start "#\\+lastmod: [\t]*")
-  :config
-  (org-roam-setup))
-(use-package magit-section)
-
-(require 'org-tempo)
+(require 'tempo)
 
 (font-lock-add-keywords
  'org-mode
@@ -938,6 +839,20 @@ See also `org-save-all-org-buffers'"
 
 (setq org-clock-sound "~/.config/emacs/sounds/Bicycle-bell-2.wav")
 (setq org-timer-default-timer 25)
+
+;;(use-package org-backlink :ensure (:host github :repo "codecoll/org-backlink"))
+
+(use-package steam :defer t :config (setq steam-username "Majmudonche"))
+
+(use-package
+ smartparens
+ :ensure t
+ :defer t
+ :hook (prog-mode eglot org-mode latex-mode)
+ :config (require 'smartparens-config))
+
+;;(use-package savehist :init (savehist-mode))
+(savehist-mode)
 
 (use-package
  eshell-syntax-highlighting
@@ -1021,22 +936,42 @@ See also `org-save-all-org-buffers'"
 	(evil-define-key 'normal vterm-mode-map (kbd "o")        #'evil-insert-resume)
 	(evil-define-key 'normal vterm-mode-map (kbd "<return>") #'evil-insert-resume))
 
-(use-package yasnippet-snippets :custom (yas-global-mode t)) ;;after cpp stuff loads
-
-(use-package treemacs :custom (lsp-treemacs-sync-mode 1))
-(use-package treemacs-evil)
-(use-package treemacs-projectile)
-
 (use-package
- rainbow-mode
- :diminish
- :hook ((org-mode prog-mode) . rainbow-mode))
+ yasnippet
+ :config
+ ;;(setq yas-snippet-dirs '("~/.config/emacs/snippets" "~/.config/emacs/elpaca/repos/yasnippet-snippets/snippets/"))
+ (yas-global-mode 1))
 
+(use-package yasnippet-snippets
+  :ensure t
+  :hook
+  (prog-mode . yas-minor-mode)
+  :bind
+  (("C-c y n" . yas-new-snippet)
+   ("C-c y v" . yas-visit-snippet-file)
+   ("C-c y i" . yas-insert-snippet))
+  :config
+  (yas-reload-all))
+
+(use-package yasnippet-capf
+  :after cape
+  :config
+(setq yasnippet-capf-lookup-by 'name) ;; Prefer the name of the snippet instead
+)
+
+(use-package colorful-mode
+ :ensure t
+ :defer t
+ :diminish
+ :hook ((org-mode prog-mode) . colorful-mode))
+
+(use-package ripgrep)
 (use-package
  projectile
  :config
- (projectile-mode 1)
- '(projectile-cache-file "/home/martin/.cache/projectile.cache"))
+ (projectile-mode 1))
+
+(use-package typit :defer t)
 
 (use-package transient)
 
@@ -1048,7 +983,7 @@ See also `org-save-all-org-buffers'"
 
 (use-package
  vundo
- :config (setq vundo-glyph-alist vundo-unicode-symbols))
+ :config (setq vundo-glyph-alist vundo-unicode-symbols) (setq vundo-window-side 'top))
 
 (use-package undo-fu)
 
@@ -1057,6 +992,27 @@ See also `org-save-all-org-buffers'"
   (setq undo-fu-session-incompatible-files '("/COMMIT_EDITMSG\\'" "/git-rebase-todo\\'"))
   (setq undo-fu-session-directory "~/.cache/undo-fu-session/")
   (undo-fu-session-global-mode))
+
+(use-package
+ vertico
+ :ensure t
+ :custom 
+ (vertico-count 9)
+ :init (vertico-mode)
+ :config
+ (define-key vertico-map (kbd "C-k") (kbd "<up>"))
+ (define-key vertico-map (kbd "C-j") (kbd "<down>")))
+
+(use-package vertico-directory
+  :after vertico
+  :ensure nil
+  ;; More convenient directory navigation commands
+  :bind (:map vertico-map
+              ("RET" . vertico-directory-enter)
+              ("DEL" . vertico-directory-delete-char)
+              ("M-DEL" . vertico-directory-delete-word))
+  ;; Tidy shadowed file names
+  :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
 
 (use-package
  which-key
