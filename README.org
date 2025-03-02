@@ -1,0 +1,4 @@
+enable symlinks on windows via enabling developer mode otherwise emacs wont work (great os)
+a modern emacs configuration thats great for myself and for you if you need to see how something is configured
+
+sources:
