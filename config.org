@@ -94,7 +94,7 @@
 * IMPORTANT PROGRAMS TO LOAD FIRST
 ** Adding the scripts directory path
 #+begin_src emacs-lisp
-(add-to-list 'load-path "~/.config/emacs/scripts/")
+(add-to-list 'load-path "/home/martin/.config/emacs/scripts/")
 #+end_src
 
 ** Sourcing the scripts
