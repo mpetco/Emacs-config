@@ -3,11 +3,34 @@
 (require 'elpaca-setup)  ;; The Elpaca Package Manager
 (require 'buffer-move)   ;; Buffer-move for better window managment
 
+(use-package activities)
+
 (use-package all-the-icons :ensure t :if (display-graphic-p))
 
 (use-package
  all-the-icons-dired
  :hook (dired-mode . (lambda () (all-the-icons-dired-mode t))))
+
+;; fork this plugin and make it run and work like dmenu
+(use-package app-launcher
+  :ensure '(app-launcher :host github :repo "SebastienWae/app-launcher"))
+(defun emacs-run-launcher ()
+  "Create and select a frame called emacs-run-launcher which consists only of a minibuffer and has specific dimensions. Runs app-launcher-run-app on that frame, which is an emacs command that prompts you to select an app and open it in a dmenu like behaviour. Delete the frame after that command has exited"
+  (interactive)
+  (with-selected-frame 
+    (make-frame '((name . "emacs-run-launcher")
+                  (minibuffer . only)
+                  (fullscreen . 0) ; no fullscreen
+                  (undecorated . t) ; remove title bar
+                  ;;(auto-raise . t) ; focus on this frame
+                  ;;(tool-bar-lines . 0)
+                  ;;(menu-bar-lines . 0)
+                  (internal-border-width . 10)
+                  (width . 80)
+                  (height . 11)))
+                  (unwind-protect
+                    (app-launcher-run-app)
+                    (delete-frame))))
 
 (use-package consult)
 
@@ -34,7 +57,7 @@
              ("S-TAB"      . corfu-previous)
              ([backtab]    . corfu-previous)
              ("S-<return>" . corfu-insert)
-             ("RET"        . corfu-insert))
+             ("RET"        . corfu-insert)) ;; corfu insert deletes the )
  :init
  (global-corfu-mode)
  (corfu-history-mode)
@@ -67,6 +90,10 @@
 
 (add-hook 'eglot-managed-mode-hook #'my/eglot-capf)
 )
+
+;;(require 'desktop)
+;;(desktop-save-mode t)
+;;(setq desktop-auto-save-timeout 180)
 
 (use-package dired-open-with :defer t :ensure t)
 ;;(defun dpautoload-function () (message "test")) the functions has to be actually defined fyi
@@ -342,7 +369,7 @@
 
   ;; By default, almost all segments are displayed only in the active window. To
   ;; display such segments in all windows, specify e.g.
-  (doom-modeline-always-visible-segments '(mu4e irc))
+  (doom-modeline-always-visible-segments '(irc))
 
   ;; Hooks that run before/after the modeline version string is updated
   (doom-modeline-before-update-env-hook nil)
@@ -355,11 +382,18 @@
  (setq initial-buffer-choice 'dashboard-open)
  (setq dashboard-set-heading-icons t)
  (setq dashboard-set-file-icons t)
- (setq dashboard-banner-logo-title
-       "Emacs Is More Than A Text Editor!")
- (setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
- ;;(setq dashboard-startup-banner "/home/martin/.config/emacs/images/emacs-dash.png")  ;; use custom image as banner
- (setq dashboard-center-content nil) ;; set to 't' for centered content
+ (setq dashboard-banner-logo-title "the extensible self-documenting integrated computing environment") ;; the first program, even before GCC, the optimus programus
+ ;; rewrite this 
+ ;;(defun dashboard-title ()
+    ;;(let ((smaller-version 
+	   ;;(replace-regexp-in-string (rx " (" (zero-or-more any) eol) "" (emacs-version))
+	   ;;(replace-regexp-in-string (rx "2025" (zero-or-more any) eol) "" (emacs-version))))
+      ;;(string-replace "\n" "" smaller-version) 
+;;)
+;;)
+ ;;(setq dashboard-banner-logo-title (format "%s" (dashboard-title)))
+ (setq dashboard-startup-banner "~/.config/emacs/dashboard-images/emacs.png") ;; use standard emacs logo as banner
+ (setq dashboard-center-content t) ;; set to 't' for centered content
  (setq dashboard-items
        '((recents . 5)
          (agenda . 5)
@@ -373,7 +407,7 @@
          (agenda . "a")
          (registers . "e")))
  :custom
- (dashboard-footer-messages '("From freedom came elegance!" "Where there is a shell, there is a way" "There's no place like 127.0.0.1" "Free as in freedom" "If you can read this, Xorg is still working" "Powered by Gentoo" "Powered by GNU/Linux" "u like regex.. dont u?" "Richard Stallman is proud of you" "“Talk is cheap. Show me the code.” \n         - Linus Torvalds" "“Well, what is a computer? A computer is a universal machine.” \n                       - Richard Stallman" "UNIX! Live Free or Die" "Linux is user friendly. It's just very picky about who its friends are." " “Intelligence is the ability to avoid doing work, yet getting the work done.” \n                               - Linus Torvalds" "Monolithic Multipurpose Xenodochial Xsystem" "Keep it simple, stupid!" "the quieter you become, the more you are able to hear" "Designed for GNU/Linux" "Certified for Microsoft© Windows™" "Certified for Windows Vista™" "Compatible with Windows®7" "Works with Windows Vista™" "Microsoft© Windows™ Capable" "Emacs is written in Lisp, which is the only computer language that is beautiful" "I showed you my source code, plz respond" "Configured by mpetco" "8MBs and constantly swapping" "a great operating system, lacking only a decent editor" "Eight Megabytes and Constantly Swapping" "Escape Meta Alt Control Shift" "EMACS Makes Any Computer Slow" "Eventually Munches All Computer Storage" "Generally Not Used, Except by Middle-Aged Computer Scientists" "How do you generate a random string? \nPut a web designer in front of vim" "Vim is the leading cause of arthritis" "Given enough eyeballs all bugs are shallow"))
+ (dashboard-footer-messages '("From freedom came elegance!" "Where there is a shell, there is a way" "There's no place like 127.0.0.1" "Free as in freedom" "If you can read this, Xorg is still working" "Powered by Gentoo" "Powered by GNU/Linux" "u like regex.. dont u?" "Richard Stallman is proud of you" "“Talk is cheap. Show me the code.” \n         - Linus Torvalds" "“Well, what is a computer? A computer is a universal machine.” \n                       - Richard Stallman" "UNIX! Live Free or Die" "Linux is user friendly. It's just very picky about who its friends are." " “Intelligence is the ability to avoid doing work, yet getting the work done.” \n                               - Linus Torvalds" "Monolithic Multipurpose Xenodochial Xsystem" "Keep it simple, stupid!" "the quieter you become, the more you are able to hear" "Designed for GNU/Linux" "Certified for Microsoft© Windows™" "Certified for Windows Vista™" "Compatible with Windows®7" "Works with Windows Vista™" "Microsoft© Windows™ Capable" "Emacs is written in Lisp, which is the only computer language that is beautiful" "I showed you my source code, plz respond" "Configured by mpetco" "8MBs and constantly swapping" "a great operating system, lacking only a decent editor" "Eight Megabytes and Constantly Swapping" "Escape Meta Alt Control Shift" "EMACS Makes Any Computer Slow" "Eventually Munches All Computer Storage" "Generally Not Used, Except by Middle-Aged Computer Scientists" "How do you generate a random string? \n Put a web designer in front of vim" "vim is the leading cause of arthritis" "Given enough eyeballs all bugs are shallow" "“An idiot admires complexity, a genius admires simplicity”" "A great lisp interpreter" "lisp machine reference goes here" "lisp mathematical notation reference goes here" "The Optimus Programus" "Before There Was GCC, There Was Emacs" "The UNIX philosophy at it's finest" "The First Program, even before GCC" "Born in the Time of Terminals, Thriving still" "The One Editor to Rule Them All" "Eigth Wonder of the Coding World" "When RMS Dreamt in Lisp" "The UNIX Way, Amplified" "vim is a plugin" "Pure Lisp, Pure Bliss" "In Unix We Trust, in Emacs We Code" "A Pipe is Only as Strong as its Editor" "The Supreme Editor (by Decree)" "The Emperor's New Editor" "Bhraman in Lisp" "The Code of Daedulus" "The Tao of the computer" "the IDE of the project" "Pontifex sexpius"))
  (dashboard-footer-icon nil)
  (dashboard-modify-heading-icons
   '((recents . "file-text") (bookmarks . "book")))
@@ -384,6 +418,221 @@
  (dashboard-setup-startup-hook))
 
 (use-package diminish)
+
+(use-package elpher)
+
+(use-package eat)
+
+(use-package emms :config 
+  (require 'emms-player-mpv)
+(setq emms-player-list '(emms-player-mpv)))
+
+;;(use-package eaf :ensure '(eaf :host github :repo "emacs-eaf/emacs-application-framework") :load-path "~/.config/emacs/site-lisp/emacs-application-framework`")
+
+(defun efs/exwm-update-class ()
+  (exwm-workspace-rename-buffer exwm-class-name))
+
+(use-package exwm
+  :config
+  ;; Set the default number of workspaces
+  (setq exwm-workspace-number 5)
+
+  ;; When window "class" updates, use it to set the buffer name
+  (add-hook 'exwm-update-class-hook #'efs/exwm-update-class)
+
+  ;; Rebind CapsLock to Ctrl
+  ;; (start-process-shell-command "xmodmap" nil "xmodmap ~/.emacs.d/exwm/Xmodmap")
+
+  ;; Load the system tray before exwm-init
+  (exwm-systemtray-mode 1)
+
+  ;; cant use SPC
+  ;; ;; These keys should always pass through to Emacs
+  (setq exwm-input-prefix-keys
+    '(?\C-x
+      ?\C-u
+      ?\C-h
+      ?\M-x
+      ;;?\SPC-wh
+      ?\M-`
+      ?\M-&
+      ?\M-:
+      ?\C-\M-j  ;; Buffer list
+      ?\C-\ ))  ;; Ctrl+Space
+
+  ;; Ctrl+Q will enable the next key to be sent directly
+  (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
+
+  ;; Set up global key bindings.  These always work, no matter the input state!
+  ;; Keep in mind that changing this list after EXWM initializes has no effect.
+  ;; dont rely on these for jack just getting out and into the regular way of doing things
+  (setq exwm-input-global-keys
+        `(
+          ;; Reset to line-mode (C-c C-k switches to char-mode via exwm-input-release-keyboard)
+          ;; ([?\M-r] . exwm-reset)
+
+	  ;; System managment related
+	  ([?\s-q] . (lambda (command) (interactive (shell-command "killall X"))))
+	  ([?\s-x] . (lambda (command) (interactive (shell-command "~/.scripts/dmenu_action.sh"))))
+	  ([?\s-s] . (lambda (command) (interactive (shell-command "flameshot gui"))))
+	  ;; ([?\s-f] . (lambda (command) (interactive (shell-command "flameshot gui")))) exwm
+
+          ;; Program managment
+          ([?\s-r] . (lambda (command)
+                       (interactive (list (read-shell-command "$ ")))
+                       (start-process-shell-command command nil command)))
+	  ;;([?\s-d] . (start-process "dmenu" nil "/usr/local/bin/dmenu_run" "-vi"))
+	  ;; use start process somehow
+	  ([?\s-d] . (lambda (command) (interactive (shell-command "~/.scripts/dmenu_run_history.sh"))))
+
+          ;; Window managment
+          ([?\s-h] . evil-window-left)
+          ([?\s-l] . evil-window-right)
+          ([?\s-k] . evil-window-up)
+          ([?\s-j] . evil-window-down)
+          ([?\s--] . evil-window-split)
+          ([?\s-\\] . evil-window-vsplit)
+          ([?\s-c] . evil-window-delete)
+
+	  ;; Buffer managment
+          ([?\s-b] . switch-to-buffer)
+          ([?\s-C] . kill-current-buffer)
+
+	  ;; Layout managment
+	  ;; please get this done so i dont have problems
+          ;; Workspace managment
+          ;; ([?\M-w] . exwm-workspace-switch)
+          ([?\M-`] . (lambda () (interactive) (exwm-workspace-switch-create 0)))
+
+          ;; 's-N': Switch to certain workspace with Super (Win) plus a number key (0 - 9)
+          ,@(mapcar (lambda (i)
+                      `(,(kbd (format "s-%d" i)) .
+                        (lambda ()
+                          (interactive)
+                          (exwm-workspace-switch-create ,i))))
+                    (number-sequence 0 9))))
+)
+  ;;(exwm-enable))
+
+(use-package exwm-modeline)
+
+;; Show battery status in the mode line
+(add-hook 'exwm-init-hook 'display-battery-mode)
+
+;; Show the time and date in modeline
+(setq display-time-day-and-date t)
+(add-hook 'exwm-init-hook 'display-time-mode)
+;; Also take a look at display-time-format and format-time-string
+
+(add-hook 'exwm-init-hook 'exwm-modeline-mode)
+
+(require 'erc)
+(add-hook 'erc-mode 'erc-autojoin-mode)
+
+(setq
+ erc-server '(("irc.libera.chat" "irc.oftc.net"))
+ erc-nick "JuvenilePrinceps"
+ erc-user-full-name "Emacs User"
+ erc-default-port "6697"
+ erc-track-shorten-start 8 ;; minmum number of characters for a channel name in the modeline
+ erc-autojoin-channels-alist '(("irc.libera.chat" "#gentoo" "#emacs" "#gnu" "#bitcoin" "#linux" "#sysadmin" "#uncyclopedia" "#lisp"))
+ erc-kill-buffer-on-part t ;; kills buffer when you run the part (leave channel) command
+ erc-auto-query 'bury) ;; create a query buffer every time you recieve a private message
+
+(setq
+ erc-fill-column 120 ;; the column at which a paragraph is broken
+ erc-fill-function 'erc-fill-static
+ erc-fill-static-center 20)
+
+(setq
+ erc-track-exclude '("#windows")
+ erc-track-exclude-types '("JOIN" "NICK" "QUIT" "MODE" "AWAY") ;; list of messages to be ignored
+ erc-hide-list '("JOIN" "NICK" "QUIT" "MODE" "AWAY") ;; message types to hide
+ erc-track-exclude-server-buffer t)
+
+(setq erc-track-visibility nil) ;; Only use the current frame for visibility
+
+;; Tracking specific keywords or people
+;; (setq erc-pals '("shom_" "masteroman" "benoitj")
+;;             erc-fools '("daviwil-test")
+;;             erc-keywords '("guix" "wiki"))
+
+;; Desktop notifications for matches/mentions
+(add-to-list 'erc-modules 'notifications)
+
+;; Check spelling of messages
+;; (add-to-list 'erc-modules 'spelling)
+
+;; List active user's nicks in a side window 
+(add-to-list 'erc-modules 'nickbar)
+
+;; Uniquely colorize nicknames in chat
+(add-to-list 'erc-modules 'nicks)
+
+;; Displaying inline images
+;;(use-package erc-image
+;;  :ensure t
+;;  :after erc
+;;  :config
+;;  (setq erc-image-inline-rescale 300)
+;;  (add-to-list 'erc-modules 'image))
+
+;;(setq erc-track-enable-keybindings t)
+
+(setq erc-prompt-for-password nil)
+
+(use-package
+ elfeed
+ :config
+ (setq elfeed-db-directory "~/.cache/elfeed/")
+
+  (defun play-elfeed-video ()
+  "Play the URL of the entry at point in mpv if it's a YouTube video."
+  (interactive)
+  (let ((entry (elfeed-search-selected :single)))
+    (if entry
+        (let ((url (elfeed-entry-link entry)))
+          (if (and url (string-match-p "https?://\\(www\\.\\)?youtube\\.com\\|youtu\\.be" url))
+              (progn
+                (shell-command (format "mpv '%s'" url))
+                (elfeed-search-untag-all-unread))
+            (message "The URL is not a YouTube link: %s" url)))
+      (message "No entry selected in Elfeed."))))
+
+  (defun play-elfeed-video2electric ()
+  "Play the URL of the entry at point in mpv if it's a YouTube video."
+  (interactive)
+  (let ((entry (elfeed-search-selected :single)))
+    (if entry
+        (let ((url (elfeed-entry-link entry)))
+          (if (and url (string-match-p "https?://\\(www\\.\\)?youtube\\.com\\|youtu\\.be" url))
+              (progn
+                (start-process "watch" nil (format "mpv '%s'" url))
+                (elfeed-search-untag-all-unread))
+            (message "The URL is not a YouTube link: %s" url)))
+      (message "No entry selected in Elfeed."))))
+
+  (defun bard/add-video-emms-queue ()
+    "Play the URL of the entry at point in mpv if it's a YouTube video. Add it to EMMS queue."
+    (interactive)
+    (let ((entry (elfeed-search-selected :single)))
+      (if entry
+          (let ((url (elfeed-entry-link entry)))
+            (if (and url (string-match-p "https?://\\(www\\.\\)?youtube\\.com\\|youtu\\.be" url))
+                (let* ((playlist-name "Watch Later")
+                       (playlist-buffer (get-buffer (format " *%s*" playlist-name))))
+                  (unless playlist-buffer
+                    (setq playlist-buffer (emms-playlist-new (format " *%s*" playlist-name))))
+                  (emms-playlist-set-playlist-buffer playlist-buffer)
+                  (emms-add-url url)
+                  (elfeed-search-untag-all-unread)
+                  (message "Added YouTube video to EMMS playlist: %s" url))
+              (message "The URL is not a YouTube link: %s" url)))
+        (message "No entry selected in Elfeed."))))
+
+)
+
+(use-package elfeed-org :config (elfeed-org) (setq rmh-elfeed-org-files (list "~/.config/emacs/elfeed.org.gpg")))
 
 (use-package ellama
   :ensure t
@@ -426,10 +675,12 @@
  evil-collection
  :after evil
  :config
- (setq evil-collection-mode-list '(dashboard dired ibuffer neotree magit vundo doc-view help elpaca package-menu buff-menu imenu buffer apropos cmake-mode snake tetris vterm vertico corfu))
+ ;;(setq evil-collection-mode-list '(dashboard dired ibuffer neotree magit vundo doc-view help elpaca package-menu buff-menu imenu buffer apropos cmake-mode snake tetris vterm vertico corfu eat eww))
  (evil-collection-init))
 
 (use-package evil-tutor)
+
+(use-package viper :disabled)
 
 (use-package embark)
 
@@ -437,7 +688,7 @@
 
 (use-package elisp-autofmt
      :config 
-     (setq elisp-autofmt-python-bin "/usr/bin/python3.11"))
+     (setq elisp-autofmt-python-bin "/usr/bin/python3.13"))
 
 (use-package
  flycheck
@@ -470,7 +721,7 @@
 (add-to-list 'default-frame-alist '(font . "Monaspace Argon-11"))
 
 ;; Uncomment the following line if line spacing needs adjusting.
-(setq-default line-spacing 0.12)
+;; (setq-default line-spacing 0.12)
 
 (use-package unicode-fonts)
 
@@ -479,15 +730,31 @@
 (global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
 (global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
 
+(setq epa-pinentry-mode 'loopback)
+
 (use-package general
   :config
   (general-evil-setup)
+
+ ;; (general-define-key
+ ;;  :keymaps 'insert
+ ;;  :prefix "SPC"
+ ;;  ;; prefix keys are prepended to other keys, so "" refers to the prefix itself
+ ;;  "s" '(lambda () (interactive) (evil-ex "%s/find/replace/gI"))) ;; visual mode selection
+
+  ;; which-key is not the problem, emacs handles keybindings very differently
+ ;; (general-define-key
+ ;;  :keymaps 'insert
+ ;;  :prefix "j"
+ ;;  :ignore t
+ ;;  ;; prefix keys are prepended to other keys, so "" refers to the prefix itself
+ ;;  "j" 'evil-normal-state)
 
   ;; set up 'SPC' as the global leader key
   (general-create-definer leader-key
     :states '(normal insert visual emacs)
     :keymaps 'override
-    :prefix "SPC" ;; set leader
+    :prefix "SPC" ;; set leader ;; you have to rewrite everything below in order to use meta as ur leader key
     :global-prefix "M-SPC") ;; access leader in insert mode
 
   ;; imported from my neovim config
@@ -503,15 +770,18 @@
   (leader-key
     "b" '(:ignore t :wk "Buffer")
     "bb" '(switch-to-buffer :wk "Switch buffer")
-    "bk" '(kill-this-buffer :wk "Kill this buffer")
+    "bk" '(:ignore t :wk "Kill buffer")
+    "bkt" '(kill-current-buffer :wk "Kill buffer")
+    "bka" '(kill-buffer :wk "Kill another buffer")
     "bi" '(ibuffer :wk "Ibuffer") ;; ig this is like panes? in tmux
     "bn" '(next-buffer :wk "Next buffer")
     "bp" '(previous-buffer :wk "Previous buffer")
     "br" '(revert-buffer :wk "Reload buffer"))
 
   (leader-key
-    "d" '(:ingore t :wk "Dired/Dashboard")
-    "dr" '(dashboard-refresh-buffer :wk "Refresh dashboard")
+    "d" '(:ingore t :wk "Dired/Dashboard/Desktop Save")
+    "dr" '(dashboard-open :wk "Refresh dashboard")
+    "ds" '(desktop-save :wk "Save windows and buffers")
     ;; dired
     "dd" '(dired :wk "Open dired")
     "dj" '(dired-jump :wk "Dired jump to current")
@@ -523,9 +793,9 @@
     "e" '(:ignore t :wk "Eshell/Evaluate")    ;; not a command but a which key description
     "eb" '(eval-buffer :wk "Evaluate elisp in buffer")
     "ed" '(eval-defun :wk "Evaluate defun containing or after point")
-    "ee" '(eval-expression :wk "Evaluate and elisp expression")
-    "ef" '(indent-pp-sexp :wk "Formate some elisp code")
-    "eh" '(counsel-esh-history :which-key "Eshell history")
+    "ee" '(eval-expression :wk "Evaluate an elisp expression")
+    ;;"ef" '(indent-pp-sexp :wk "Formate some elisp code")
+    ;;"eh" '(esh-history :which-key "Eshell history")
     "el" '(eval-last-sexp :wk "Evaluate elisp expression before point")
     "er" '(eval-region :wk "Evaluate elisp in region")
     "es" '(eshell :which-key "Eshell"))
@@ -533,13 +803,15 @@
   (leader-key
     "SPC" '(execute-extended-command :wk "M-x")
     "." '(find-file :wk "Find file") ;; make this more like the one in neovim
-    "fr" '(counsel-recentf :wk "Find recent files") ;; also fr h is a neovimism
+    "fr" '(recentf :wk "Find recent files") ;; also fr h is a neovimism
     "fc" '((lambda () (interactive) (find-file "~/.config/emacs/config.org")) :wk "Edit emacs config")
     "h" '(:ignore t :wk "Help")
+    "he" '(kill-emacs :wk "Exit emacs")
     "hf" '(describe-function :wk "Describe function")
     "hv" '(describe-variable :wk "Describe variable")
     "hk" '(describe-key :wk "Describe a key")
-    "hrr" '((lambda () (interactive) (load-file "~/.config/emacs/init.el")) :wk "Reload config")
+    ;;"hr" '(:ignore t :wk "Reload config") the one below was hrr
+    "hr" '((lambda () (interactive) (load-file "~/.config/emacs/init.el")) :wk "Reload config")
     "TAB TAB" '(comment-line :wk "Comment lines they have to be in visual mode selected tho"))
 
   (leader-key
@@ -551,7 +823,8 @@
     "tv" '(vterm-toggle :wk "Toggle vterm"))
 
   (leader-key
-    "f" '(:ignore t :wk "Format")
+    "f" '(:ignore t :wk "Format/Find")
+    ;; ff find file synonymous with . find-file
     "fe" '(:ignore t :wk "Format Elisp")
     "feb" '(elisp-autofmt-buffer :wk "Format the entire buffer")
     "fer" '(elisp-autofmt-region :wk "Format the selected text")
@@ -560,7 +833,11 @@
     "flb"  '(eglot-format-buffer :wk "Format buffer"))
 
   (leader-key
-    "w" '(:ignore t :wk "Windows")
+    "w" '(:ignore t :wk "Windows/Workspaces")
+    ;; Workspaces
+    "ww" '(exwm-workspace-switch :wk "Change workspace")
+    "wm" '(exwm-workspace-move-window :wk "Move window to another workspace")
+    ;; exwm-workspace-switch-to-buffer
     ;; Window splits
     "wc" '(evil-window-delete :wk "Close window")
     "wn" '(evil-window-new :wk "New window")
@@ -571,63 +848,91 @@
     "wj" '(evil-window-down :wk "Window down")
     "wk" '(evil-window-up :wk "Window up")
     "wl" '(evil-window-right :wk "Window right")
-    "ww" '(evil-window-next :wk "Goto next window")
+    ;;"ww" '(evil-window-next :wk "Goto next window")
     ;; Move Windows
     "wH" '(buf-move-left :wk "Buffer move left")
     "wJ" '(buf-move-down :wk "Buffer move down")
     "wK" '(buf-move-up :wk "Buffer move up")
     "wL" '(buf-move-right :wk "Buffer move right"))
 
+  (leader-key 
+    "n" '(:ignore t :wk "Org Roam")
+    "nl" '(org-roam-buffer-toggle :wk "View all files linking to this file")
+    "nf" '(org-roam-node-find :wk "Find notes")
+    "ng"  '(org-roam-graph :wk "Show a graph of all of yours nodes")
+    "ni"  '(org-roam-node-insert :wk "Insert a link to another node")
+    "ne"  '(org-roam-ref-add :wk "Insert a reference")
+    "nc"  '(org-roam-capture :wk "Capture a note into your personal wiki")
+    "nj" '(org-roam-dailies-capture-today :wk "Org roam dailies")
+    "nh" '(org-id-get-create :wk "Create a heading note")
+    "nr" '(org-roam-node-random :wk "Open a random note")
+    "nt" '(org-roam-tag-add :wk "Add a tag to a node")
+    "na" '(org-roam-alias-add :wk "Create an alias for a note"))
+
+  ;; Org timer
+  (leader-key
+    "r" '(:ignore t :wk "Window manager behavior")
+    "rx" '((lambda (command) (interactive (shell-command "~/.scripts/dmenu_action.sh"))) :wk "Lock/Suspend/Poweroff/Reboot") ;; fix the wrong type error
+    "rl" '(:ignore t :wk "Elfeed")
+    "ry" '(:ignore t :wk "Explore youtube")
+    "rp" '(:ignore t :wk "play a game (the casual preinstalled ones)")
+    "rr" '((lambda (command) (interactive (list (read-shell-command "$ "))) (start-process-shell-command command nil command)) :wk "Launch a program"))
+
   ;; put the gtd stuff and roam stuff in here
   (leader-key
     "m" '(:ignore t :wk "Org")
     "ma" '(org-agenda :wk "Org agenda")
     "me" '(org-export-dispatch :wk "Org export dispatch")
-    "mi" '(org-toggle-item :wk "Org toggle item")
+    ;;"mi" '(org-toggle-item :wk "Org toggle item")
+    "mI" '(org-toggle-inline-images :wk "Toggle images")
+    "mP" '(org-download-clipboard :wk "Paste image")
     "mt" '(org-todo :wk "Org todo") ;; C-c C-t for the state of the entry
+    "mT" '(org-ctrl-c-ctrl-c :wk "Set tags for an entry") ;; C-c C-c  for tags
     "mB" '(org-babel-tangle :wk "Org babel tangle")
-    "mT" '(org-todo-list :wk "Org todo list")
-    "mc" '(org-toggle-checkbox :wk "Toggle between the states of a checkbox")
+    ;;"mc" '(org-toggle-checkbox :wk "Toggle between the states of a checkbox")
     "mh" '(org-id-get-create :wk "Create a heading note")
-    "ms" '(org-schedule :wk "Set an org schedule")
     "mo" '(org-open-at-point :wk "Open a link")
-    "ml" '(org-insert-link :wk "Insert a link")
-    "mf" '((lambda () (interactive) (cd "~/Notes/PersonalWiki/") (call-interactively 'find-file)) :wk "Find notes"))
+    "ml" '(org-insert-link :wk "Insert a link"))
 
-  (leader-key
-    "mg" '(:ignore t :wk "GTD")
-    "mgf" '((lambda () (interactive) (cd "~/Notes/GTD") (call-interactively 'find-file)) :wk "Find GTD files")
-    "mgr" '(org-refile :wk "Refile a file into GTD directory") ;; C-c C-w
-    "mgc" '(org-capture :wk "Capture an idea")
-    "mgi" '((lambda () (interactive) (org-capture nil "i")) :wk "Capture an idea directly into ur inbox")
-    "mgt" '(org-ctrl-c-ctrl-c :wk "Set tags for an entry") ;; C-c C-c  for tags
-    "mgg" '((lambda () (interactive) (org-agenda nil "g")) :wk "View the GTD view in agendas directly"))
-
+  ;; Org timer
   (leader-key
     "mp" '(:ignore t :wk "Org timer")
     "mps" '(org-timer-set-timer :wk "Set a timer")
     "mpe" '(org-timer-stop :wk "End a timer")
     "mpp" '(org-timer-pause-or-continue :wk "Pause a timer"))
-  ;;C-c ! inactive timestamp
-  ;;C-c . Plain timestamp
+
+  ;; Org clock in out, i like this way of doing keychords
+  (leader-key
+    "me" '(org-set-effort :wk "Set effort")
+    "mk" '(:ignore t :wk "Begin or end a task")
+    "mki" '(org-clock-in :wk "Clock in on current task")
+    "mko" '(org-clock-out :wk "Clock out on current task"))
 
   (leader-key
     "mb" '(:ignore t :wk "Tables")
     ;; add the create table with options org table create with, org table create 
     "mb-" '(org-table-insert-hline :wk "Insert hline in table"))
 
+   ;; Org timestamps
   (leader-key
     "md" '(:ignore t :wk "Date/deadline")
+    "mds" '(org-schedule :wk "Org schedule")
     "mdd" '(org-deadline :wk "Org deadline")
-    "mdt" '(org-time-stamp :wk "Org time stamp"))
-
-  (leader-key 
-    "mv" '(multi-vterm :wk "Launch a vterm instance"))
+    "mdt" '(org-timestamp :wk "Org timestamp")
+    "mdi" '(org-timestamp-inactive :wk "Org inactive timestamp"))
+  
+  ;; Org gtd related
+  (leader-key
+    "mf" '((lambda () (interactive) (cd "~/Notes/GTD") (call-interactively 'find-file)) :wk "Find GTD files")
+    "mr" '(org-refile :wk "Refile into a project") ;; C-c C-w
+    "mc" '(org-capture :wk "Capture an idea")
+    "mi" '((lambda () (interactive) (org-capture nil "i")) :wk "Capture an idea directly into ur inbox")
+    "mg" '((lambda () (interactive) (org-agenda nil "g")) :wk "View the GTD view in agendas directly"))
 
   (leader-key
     "g" '(:ingore t :wk "Git")
-    "gs" '(magit-status :wk "Magit status")
-    "gt" '(git-timemachine:wk "Git time machine"))
+    "gs" '(magit-status :wk "Magit status"))
+    ;;"gt" '(git-timemachine :wk "Git time machine")
 
   ;;leader-key a leasiure, rss reader, browser, irc chat, steam launcher minecraft launcher
   ;;(leader-key latexmk, and clean keybinding, and view keybinding
@@ -635,6 +940,9 @@
     "l" '(:ingore t :wk "Latex")
     "lc" '((lambda () (interactive) (shell-command (format "/usr/bin/pdflatex" (shell-quote-argument (buffer-file-name))) ) ) :wk "Latex compile") ;; make it grab the current string of the open tex file
     "lv" '((lambda () (interactive) (dired buffer-file-name)) :wk "Latex view compiled"))
+
+  ;; (leader-key 
+  ;;   "c") write a few keybinds for compiling compile project compile file etc run compiled program
 
   (leader-key
     "p" '(projectile-command-map :wk "Projectile")))
@@ -658,104 +966,83 @@
 (use-package git-gutter :hook (prog-mode . git-gutter))
 
 (require 'org)
-;; defining the files org-mode will look at
-(setq org-directory "~/Notes/GTD")
-;; this does not add files to org-agenda use org-agenda-file-to-front, a fix is avilable this has to load after org-mode has loaded but i dont know the function that does that in non doom emacs
-;; write a custom hook to load this after org-mode
-(setq org-agenda-files (list "inbox.org" "projects.org" "agenda.org")) ;; this still doesnt work
-;; this bit works no problem
-(setq org-agenda-files
-      (mapcar 'file-truename
-          (file-expand-wildcards "*.org")))
 
-;; Save the corresponding buffers
-(defun gtd-save-org-buffers ()
-  "Save `org-agenda-files' buffers without user confirmation.
-See also `org-save-all-org-buffers'"
-  (interactive)
-  (message "Saving org-agenda-files buffers...")
-  (save-some-buffers t (lambda () 
-             (when (member (buffer-file-name) org-agenda-files) 
-               t)))
-  (message "Saving org-agenda-files buffers... done"))
+;; Files
+(setq org-directory "~/Notes/GTD/")
+(setq org-agenda-files (list "inbox.org" "projects.org" "agenda.org"))
 
-;; Add it after refile
-(advice-add 'org-refile :after
-        (lambda (&rest _)
-          (gtd-save-org-buffers)))
-
-;; default agenda view 
-(setq org-agenda-span 2)
-
-;; variables for the command below
-(setq gtd/next-action-head "Next action: ")
-(setq gtd/deadline-head "Deadline: ")
-(setq gtd/inbox-head "Inbox: ")
-(setq gtd/complete-head "Completed items: ")
-(setq gtd/project-head "Projects: ")
-(setq gtd/someday-head "Someday/maybe: ")
-
-;; gtd view this is a custom agenda command its binded to the g key
-(setq org-agenda-custom-commands
-      '(
-        ("g" "GTD view"
-         ((agenda)
-          (tags-todo "+PRIORITY=\"A\"" ((org-agenda-overriding-header gtd/next-action-head)))
-          (search "DEADLINE" ((org-agenda-overriding-header gtd/deadline-head)))
-          ;;(search "SCHEDULE" ((org-agenda-overriding-header gtd/deadline-head)))
-          (todo "COMPLETE" ((org-agenda-overriding-header gtd/complete-head)))
-          (todo "TODO" ((org-agenda-overriding-header gtd/inbox-head)))
-          (todo "PROJECT" ((org-agenda-overriding-header gtd/project-head)))
-          (todo "HOLD"  ((org-agenda-overriding-header gtd/someday-head)))
-          ))))
-
-;; Capture templates to capture ideas into the inbox thing
+;; Capture
 (setq org-capture-templates
-      `(("i" "Inbox" entry  (file "inbox.org")
-         ,(concat "* TODO %?\n" ;; add a \n here so theres an empty line before it
-                  "/Entered on/ %U"))
-        ("p" "Project" entry  (file "projects.org")
-         ,(concat "* PROJECT %?\n"
-                  "/Entered on/ %U\n"
-                  "** Description \n"
-                  "** Concept images \n"
-                  "** Notes \n"
-                  "** Tasks \n"))
-        ("d" "Deadline" entry  (file "inbox.org")
-         ,(concat "* DEADLINE /Due on/ %? <%<%Y-%m-%d %a %H:00>> \n"))
-        ("r" "Recurrent" entry  (file+headline "agenda.org" "Recurrent")
-         ,(concat "* Reccurent event <timestamp 18:00-19:30>%?\n"
-                  "SCHEDULED: <or date <2025-01-21 Tue> +/-/1y/m/w/d/h> \n"
-                  "or work days SCHEDULED: <add2percentsignshere(memq (calendar-day-of-week date) '(1 2 3 4 5))>"))
-        ("m" "Meeting" entry  (file+headline "agenda.org" "Future")
-         ,(concat "* %? :meeting:\n"
-                  "<%<%Y-%m-%d %a %H:00>>"))))
+      `(("i"
+         "Inbox"
+         entry
+         (file "inbox.org")
+         ,(concat "* TODO %?\n" "/Entered on/ %U")
+         :prepend top
+         :empty-lines-before 1)
+        ("p"
+         "Project"
+         entry
+         (file "projects.org")
+         ,(concat "* TODO %?\n" "/Entered on/ %U\n"))
+        ("m" "Scheduled" entry (file+headline "agenda.org" "Future")
+         ,(concat
+           "* TODO %? :meeting:\n" "SCHEDULED: <%^{yyyy-mm-dd}>"))
+        ("d" "Deadline" entry (file+headline "agenda.org" "Future")
+         ,(concat
+           "* TODO %? :deadline:\n" "DEADLINE: <%^{yyyy-mm-dd}>"))
+        ("r"
+         "Recurrent"
+         entry
+         (file+headline "agenda.org" "Recurrent")
+         ,(concat "* Reccurent event %?\n"))))
 
 ;; Use full window for org-capture
-(add-hook 'org-capture-mode-hook 'delete-other-windows)
-
-;; tags r redundent so we r hiddin em
-(setq org-agenda-hide-tags-regexp ".")
-
-;; gets rid of the category display for to do items
-(setq org-agenda-prefix-format
-      '((agenda . " ")
-        (todo   . " ") ;; display the deadline date and schedule date too see the dashboard menu for that too
-        (tags   . " ")
-        (search . " %(let ((scheduled (org-get-deadline-time (point)))) (if scheduled (format-time-string \"%Y-%m-%d\" scheduled) \"\")) ")))
+(add-hook 'org-capture-mode-hook 'delete-other-windows) ;; make it so the org select window is also the only window and change the C-c to anything else or better disable capture mode and use :w
 
 ;; Refile
 (setq org-refile-use-outline-path 'file)
 (setq org-outline-path-complete-in-steps nil)
-;;(setq org-refile-targets
-;;      '(("projects.org" :regexp . "\\(?:\\(?:Note\\|Task\\)s\\)"))) ;; "Note" and "Task"s specify the heading
-(setq org-refile-targets
-      '(("projects.org" :maxlevel . 1)
-        ("inbox.org" :maxlevel . 1)))
+(setq org-refile-targets '(("projects.org" :maxlevel . 4)))
 
-;; todo keywords
+;; TODO
 (setq org-todo-keywords
-      '((sequence "TODO(t)" "HOLD(h)" "PROJECT(p)" "|" "COMPLETE(c)")))
+      '((sequence "TODO(t)" "NEXT(n)" "HOLD(h)" "|" "COMPLETE(c)")))
+
+(defun log-todo-next-creation-date (&rest ignore)
+  "Log NEXT creation time in the property drawer under the key 'ACTIVATED'"
+  (when (and (string= (org-get-todo-state) "NEXT")
+             (not (org-entry-get nil "ACTIVATED")))
+    (org-entry-put nil "ACTIVATED" (format-time-string "[%Y-%m-%d]"))))
+(add-hook 'org-after-todo-state-change-hook #'log-todo-next-creation-date)
+
+;; Agenda
+(setq org-agenda-span 1)
+
+;; maybe include a section for everything scheduled
+(setq org-agenda-custom-commands
+      '(("g" "Get Things Done (GTD) view"
+         ((agenda ""
+                  ((org-agenda-skip-function
+                    '(org-agenda-skip-entry-if 'deadline))
+                   (org-deadline-warning-days 0)))
+          (todo "NEXT"
+                ((org-agenda-skip-function
+                  '(org-agenda-skip-entry-if 'deadline))
+                 (org-agenda-prefix-format "  %i %-12:c [%e] ")
+                 (org-agenda-overriding-header "\nTasks\n")))
+          (agenda nil
+                  ((org-agenda-entry-types '(:deadline))
+                   (org-agenda-format-date "")
+                   (org-deadline-warning-days 7)
+                   ;; (org-agenda-skip-function
+                   ;;  '(org-agenda-skip-entry-if 'notregexp "\\* NEXT"))
+                   (org-agenda-overriding-header "\nDeadlines")))
+          (tags-todo "inbox"
+                     ((org-agenda-prefix-format "  %?-12t% s")
+                      (org-agenda-overriding-header "\nInbox\n")))
+          (tags "CLOSED>=\"<today>\""
+                ((org-agenda-overriding-header "\nCompleted today\n")))))))
 
 (menu-bar-mode -1)
 (tool-bar-mode -1)
@@ -765,16 +1052,20 @@ See also `org-save-all-org-buffers'"
 (setq display-line-numbers-type 'relative)
 (global-visual-line-mode t)
 
+(setopt use-short-answers t)
+
 (add-hook 'LaTeX-mode-hook 'lsp)
 (setq TeX-parse-self t)
 ;;(add-to-list 'auto-mode-alist '("\\.tex\\'" . 'lsp))
 
-;;(use-package auctex)
+;;(use-package tex-mode :ensure nil)
 
 (add-to-list 'auto-mode-alist '("\\.pdf\\'" . doc-view-mode))
 
 ;;(use-package lua-mode)
 ;;(use-package haskell-mode)
+
+;;(use-package mule)
 
 ;;(use-package nyan-mode)
 
@@ -784,6 +1075,8 @@ See also `org-save-all-org-buffers'"
 
 (add-hook 'c++-mode-hook #'(lambda () (hs-minor-mode 1)))
 (add-hook 'c-mode-hook #'(lambda () (hs-minor-mode 1)))
+
+(use-package weather-scout :ensure (:host github :repo "hsolg/emacs-weather-scout"))
 
 (use-package neotree
   :config
@@ -809,6 +1102,88 @@ See also `org-save-all-org-buffers'"
   (completion-styles '(orderless basic))
   (completion-category-defaults nil)
   (completion-category-overrides '((file (styles basic partial-completion)))))
+
+(setq org-latex-create-formula-image-program 'dvipng)
+
+(use-package
+  org-roam
+  :ensure t
+  :after org
+  :custom
+  (org-roam-directory (file-truename "~/Notes/PersonalWiki/"))
+  (org-roam-completion-everywhere t)
+
+  ;; configures templates for nodes
+  (org-roam-capture-templates
+   '(("d" "default" plain "%?"
+      :target (file+head "%<%Y%m%d%H%M%S>.org.gpg" "#+title: ${title}\n#+type: %^{type}\n#+filetags: %^{tags}")
+      :unnarrowed t)
+     ("m" "map of content" plain
+      "* Topic Index\n- node1\n- node2 %?"
+      :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+type: %^{type}\n#+filetags: %^{tags}")
+      :unnarrowed t)
+     ("l" "programming language" plain
+      "* Description\n%?\n* Characteristics\n Paradigm:\n Designed by:\n First appeared: %^{Year}\n Typing discipline:\n Filename extension: %^{Extension}\n Family:\n Influenced by:\n\n* Syntax\n(link to syntax reference)\n\n* Uses\n\n* Reference\n- some link\n- another link\n"
+      :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+type: %^{type}\n#+filetags: %^{tags}")
+      :unnarrowed t)
+     ("a" "author note" plain
+      "\n* Source\n\nAuthor: \nTitle: ${title}\nType: \nGenre: \nYear: %^{Year}\n\n* Plot\n\n%?\n\n* Characters\n\n* Themes\n\n* Structure"
+      :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+type: %^{type}\n#+filetags: %^{tags}")
+      :unnarrowed t)
+     ("b" "book note" plain
+      "\n* Source\n\nAuthor: %^{Author} \nTitle: ${title}\nType: %^{Type} \nGenre: %^{Genre} \nYear: %^{Year}\n\n* Plot\n\n%?\n\n* Characters\n\n* Themes\n\n* Structure"
+      :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+type: %^{type}\n#+filetags: %^{tags}")
+      :unnarrowed t)
+     ("y" "youtube script" plain
+      "\n* Source\n\nAuthor: %^{Author}\nTitle: ${title}\nYear: %^{Year}\n\n* Summary\n\n%? insert those five points from that one tutorial"
+      :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+type: %^{type}\n#+filetags: %^{tags}")
+      :unnarrowed t)
+     ))
+
+  ;; configures the org roam buffer display for backlinks
+  (add-to-list
+   'display-buffer-alist
+   '("\\*org-roam\\*"
+     (display-buffer-in-direction)
+     (direction . right)
+     (window-width . 0.33)
+     (window-height . fit-window-to-buffer)))
+
+  ;; configures the org-roam-node-find menu
+  (org-roam-node-display-template (concat "${type:10} ${title:25} " (propertize "${tags:150}" 'face 'org-tag)))
+  :config 
+
+  (cl-defmethod org-roam-node-type ((node org-roam-node))
+    "Return the TYPE of NODE."
+    ;;(print (cadar (org-collect-keywords '("type") (file-truename "~/Notes/PersonalWiki/"))))
+    ;;(org-roam-get-keyword "type" (org-roam-node-file node))
+    (if (org-roam-node-file node)
+        (with-temp-buffer
+          (insert-file-contents (org-roam-node-file node) nil 0 nil)
+          (org-roam--get-keyword "type"))
+      (org-roam--get-keyword "type" nil)))
+
+  (org-roam-db-autosync-enable)
+
+  )
+
+(use-package magit-section)
+
+(use-package evil-org
+  :ensure t
+  :after org
+  :hook (org-mode . (lambda () evil-org-mode))
+  :config
+  (require 'evil-org-agenda)
+  (evil-org-agenda-set-keys))
+
+(use-package org-roam-ui
+    :after org
+    :config
+    (setq org-roam-ui-sync-theme t
+          org-roam-ui-follow t
+          org-roam-ui-update-on-save t
+          org-roam-ui-open-on-start t))
 
 (use-package
  toc-org
@@ -842,7 +1217,8 @@ See also `org-save-all-org-buffers'"
 
 ;;(use-package org-backlink :ensure (:host github :repo "codecoll/org-backlink"))
 
-(use-package steam :defer t :config (setq steam-username "Majmudonche"))
+(use-package org-download) ;;:config (setq org-download-image-dir "~/Notes/.images/"))
+(setq org-download-image-dir "~/Notes/.images/")
 
 (use-package
  smartparens
@@ -871,13 +1247,13 @@ See also `org-save-all-org-buffers'"
  eshell-hist-ignoredups t
  eshell-scroll-to-bottom-on-input t
  eshell-destroy-buffer-when-process-dies t
- eshell-visual-commands' ("bash" "fish" "htop" "ssh" "top" "zsh"))
+ eshell-visual-commands' ("bash" "fish" "htop" "ssh" "top" "zsh" "btop" "glances"))
 
 (use-package
  vterm
  :config
  (setq
-  vterm-shell "/bin/zsh"
+  vterm-shell "/usr/bin/fish"
   vterm-max-scrollback 5000))
 
 (use-package
@@ -1014,21 +1390,18 @@ See also `org-save-all-org-buffers'"
   ;; Tidy shadowed file names
   :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
 
-(use-package
- which-key
- :init (which-key-mode 1)
- :diminish
- :config
- (setq
-  which-key-side-window-location 'bottom
-  which-key-sort-order #'which-key-key-order-alpha
-  which-key-sort-uppercase-first nil
-  which-key-add-column-padding 1
-  which-key-max-display-columns nil
-  which-key-min-display-lines 6
-  which-key-side-window-slot -10
-  which-key-side-window-max-height 0.25
-  which-key-idle-delay 0.8
-  which-key-max-description-length 25
-  which-key-allow-imprecise-window-fit nil
-  which-key-separator " → "))
+(require 'which-key)
+(which-key-mode t)
+(setq
+ which-key-side-window-location 'bottom
+ which-key-sort-order #'which-key-key-order-alpha
+ which-key-sort-uppercase-first nil
+ which-key-add-column-padding 1
+ which-key-max-display-columns nil
+ which-key-min-display-lines 6
+ which-key-side-window-slot -10
+ which-key-side-window-max-height 0.25
+ which-key-idle-delay 0.8
+ which-key-max-description-length 25
+ which-key-allow-imprecise-window-fit nil
+ which-key-separator " → ")
