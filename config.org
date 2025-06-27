@@ -1215,7 +1215,9 @@ Magit is like the
  magit
  :custom
  (vc-handled-backends nil)
- (magit-section-initial-visibility-alist '((untracked . show))))
+ (magit-section-initial-visibility-alist '((untracked . show)))
+ :config
+ (add-hook 'magit-process-find-password-functions 'magit-process-password-auth-source)) ;; automatically find git credentials
 #+end_src
 
 ** Git gutter
