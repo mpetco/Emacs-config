@@ -12,63 +12,63 @@
 - [[#activities][ACTIVITIES]]
 - [[#all-the-icons][ALL THE ICONS]]
 - [[#app-launcher][APP-LAUNCHER]]
+- [[#cape][CAPE]]
+- [[#colorful-mode][COLORFUL-MODE]]
 - [[#consult][CONSULT]]
 - [[#corfu][CORFU]]
   - [[#nerd-icons-corfu][Nerd-icons-corfu]]
   - [[#corfu-terminal][Corfu terminal]]
-- [[#cape][CAPE]]
-- [[#desktop-save][DESKTOP-SAVE]]
-- [[#dired][DIRED]]
-- [[#doom-modeline][DOOM-MODELINE]]
 - [[#dap][DAP]]
   - [[#dap-mode][DAP-MODE]]
 - [[#dashboard][DASHBOARD]]
+- [[#desktop-save][DESKTOP-SAVE]]
 - [[#diminish][DIMINISH]]
-- [[#elpher][ELPHER]]
-- [[#eat][EAT]]
-- [[#emms][EMMS]]
+- [[#dired][DIRED]]
+- [[#doom-modeline][DOOM-MODELINE]]
 - [[#eaf][EAF]]
-- [[#exwm][EXWM]]
-  - [[#exwm-modeline][EXWM-MODELINE]]
-  - [[#mode-line-status][MODE LINE STATUS]]
-- [[#erc][ERC]]
+- [[#easy-pg][EASY-PG]]
+- [[#eat][EAT]]
+- [[#eglot][EGLOT]]
+- [[#embark][EMBARK]]
+  - [[#embark-consult][EMBARK-CONSULT]]
+- [[#emms][EMMS]]
 - [[#elfeed][ELFEED]]
   - [[#elfeed-org][ELFEED-ORG]]
 - [[#ellama][ELLAMA]]
-- [[#eglot][EGLOT]]
+- [[#elpher][ELPHER]]
+- [[#erc][ERC]]
 - [[#evil][EVIL]]
   - [[#disable-viper][Disable viper]]
-- [[#embark][EMBARK]]
-  - [[#embark-consult][EMBARK-CONSULT]]
-- [[#formatters][FORMATTERS]]
-  - [[#elisp-autofmt][elisp-autofmt]]
+- [[#exwm][EXWM]]
+  - [[#exwm-modeline][EXWM-MODELINE]]
+  - [[#mode-line-status][MODE LINE STATUS]]
 - [[#flycheck][FLYCHECK]]
 - [[#fonts][FONTS]]
   - [[#setting-the-font-face][setting the font face]]
   - [[#unicode-fonts][unicode fonts]]
   - [[#zooming-inout][zooming in/out]]
-- [[#easy-pg][EASY-PG]]
+- [[#formatters][FORMATTERS]]
+  - [[#elisp-autofmt][elisp-autofmt]]
 - [[#general][GENERAL]]
+- [[#gettings-things-done][GETTINGS THINGS DONE]]
 - [[#git][GIT]]
   - [[#git-time-machine][Git Time Machine]]
   - [[#magit][Magit]]
   - [[#git-gutter][Git gutter]]
-- [[#gettings-things-done][GETTINGS THINGS DONE]]
 - [[#graphical-user-interface-tweaks][GRAPHICAL USER INTERFACE TWEAKS]]
   - [[#disable-menubar-toolbars-and-scrollbars][Disable Menubar, Toolbars and Scrollbars]]
   - [[#display-line-numbers-and-truncated-lines][Display Line Numbers and Truncated Lines]]
   - [[#enable-short-answers][Enable short answers]]
+- [[#language-support][LANGUAGE SUPPORT]]
 - [[#latex][LATEX]]
   - [[#modes][Modes]]
   - [[#auctex][AUCTeX]]
   - [[#pdf-viewer][PDF viewer]]
-- [[#language-support][LANGUAGE SUPPORT]]
-- [[#mule][MULE]]
-- [[#misc-testing][MISC TESTING]]
 - [[#marginalia][MARGINALIA]]
+- [[#misc-testing][MISC TESTING]]
 - [[#modes-1][MODES]]
   - [[#automatically-turning-on-modes][Automatically turning on modes]]
-- [[#weather-scout][WEATHER-SCOUT]]
+- [[#mule][MULE]]
 - [[#neotree][NEOTREE]]
 - [[#orderless][ORDERLESS]]
 - [[#org-mode][ORG-MODE]]
@@ -81,22 +81,21 @@
   - [[#pomodor-in-org-clock][Pomodor in org clock]]
   - [[#org-back-links][Org back links]]
   - [[#org-download][org-download]]
-- [[#smartparens][SMARTPARENS]]
+- [[#projectile][PROJECTILE]]
 - [[#savehist][SAVEHIST]]
 - [[#shells-and-terminals][SHELLS AND TERMINALS]]
   - [[#eshell][eshell]]
   - [[#vterm][vterm]]
   - [[#vterm-toggle][vterm toggle]]
   - [[#multivterm][multivterm]]
+- [[#smartparens][SMARTPARENS]]
 - [[#snippets][SNIPPETS]]
   - [[#yasnippet][Yasnippet]]
   - [[#yasnippet-snippets][Yasnippet-snippets]]
   - [[#yasnippet-capf][Yasnippet-capf]]
-- [[#colorful-mode][COLORFUL-MODE]]
-- [[#projectile][PROJECTILE]]
-- [[#typit][TYPIT]]
-- [[#transient][TRANSIENT]]
 - [[#theme][THEME]]
+- [[#transient][TRANSIENT]]
+- [[#typit][TYPIT]]
 - [[#undo][UNDO]]
   - [[#undo-limits][undo limits]]
   - [[#vundo][vundo]]
@@ -105,6 +104,7 @@
 - [[#vertico][VERTICO]]
   - [[#vertico-directory][Vertico directory]]
   - [[#vertico-packages][Vertico packages]]
+- [[#weather-scout][WEATHER-SCOUT]]
 - [[#which-key][WHICH-KEY]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
@@ -158,6 +158,44 @@ Note you have to run the *all-the-icons-install-fonts* command so it actually in
                     (delete-frame))))
 #+end_src
 
+* CAPE
+this bit can use some rewriting, if only you put where you got it from
+https://github.com/Gavinok/emacs.d
+#+begin_src emacs-lisp
+(use-package
+ cape
+ :ensure t
+ :defer 10
+ :init
+ (add-hook 'completion-at-point-functions #'cape-file) ;; you can complete files /bin/
+ (add-hook 'completion-at-point-functions #'cape-dabbrev) ;; dabbrev pretty cool
+ (add-hook 'completion-at-point-functions #'cape-dict) ;; dabbrev pretty cool
+ (add-hook 'completion-at-point-functions #'yasnippet-capf) ;; yasnippets
+ (add-hook 'completion-at-point-functions #'cape-elisp-block)
+
+(defun my/eglot-capf ()
+  (setq-local completion-at-point-functions
+              (list (cape-capf-super
+                     #'eglot-completion-at-point
+                     #'yasnippet-capf))))
+;; make functions by language so you can enable dabbrev for tex
+;; make yasnippets load sepperately form everything else
+
+(add-hook 'eglot-managed-mode-hook #'my/eglot-capf)
+)
+
+#+end_src
+
+* COLORFUL-MODE
+Preview any color in the buffer.
+#+begin_src emacs-lisp
+(use-package colorful-mode
+ :ensure t
+ :defer t
+ :diminish
+ :hook ((org-mode prog-mode) . colorful-mode))
+#+end_src
+
 * CONSULT
 #+begin_src emacs-lisp
 (use-package consult)
@@ -209,32 +247,56 @@ NOTE: Corfu relies on child frames to show the popup. Emacs 31 supports child fr
 (use-package corfu-terminal)
 #+end_src
 
-* CAPE
-this bit can use some rewriting, if only you put where you got it from
-https://github.com/Gavinok/emacs.d
+* DAP
+** DAP-MODE
+#+begin_src
+(use-package dap-mode)
+#+end_src
+
+* DASHBOARD
+# NOT CONFIGURED ADD PROJECTS FROM THAT FILE
 #+begin_src emacs-lisp
 (use-package
- cape
+ dashboard
  :ensure t
- :defer 10
  :init
- (add-hook 'completion-at-point-functions #'cape-file) ;; you can complete files /bin/
- (add-hook 'completion-at-point-functions #'cape-dabbrev) ;; dabbrev pretty cool
- (add-hook 'completion-at-point-functions #'cape-dict) ;; dabbrev pretty cool
- (add-hook 'completion-at-point-functions #'yasnippet-capf) ;; yasnippets
- (add-hook 'completion-at-point-functions #'cape-elisp-block)
-
-(defun my/eglot-capf ()
-  (setq-local completion-at-point-functions
-              (list (cape-capf-super
-                     #'eglot-completion-at-point
-                     #'yasnippet-capf))))
-;; make functions by language so you can enable dabbrev for tex
-;; make yasnippets load sepperately form everything else
-
-(add-hook 'eglot-managed-mode-hook #'my/eglot-capf)
-)
-
+ (setq initial-buffer-choice 'dashboard-open)
+ (setq dashboard-set-heading-icons t)
+ (setq dashboard-set-file-icons t)
+ (setq dashboard-banner-logo-title "the extensible self-documenting integrated computing environment") ;; the first program, even before GCC, the optimus programus
+ ;; rewrite this 
+ ;;(defun dashboard-title ()
+    ;;(let ((smaller-version 
+	   ;;(replace-regexp-in-string (rx " (" (zero-or-more any) eol) "" (emacs-version))
+	   ;;(replace-regexp-in-string (rx "2025" (zero-or-more any) eol) "" (emacs-version))))
+      ;;(string-replace "\n" "" smaller-version) 
+;;)
+;;)
+ ;;(setq dashboard-banner-logo-title (format "%s" (dashboard-title)))
+ (setq dashboard-startup-banner "~/.config/emacs/dashboard-images/emacs.png") ;; use standard emacs logo as banner
+ (setq dashboard-center-content t) ;; set to 't' for centered content
+ (setq dashboard-items
+       '((recents . 5)
+         (agenda . 5)
+         (bookmarks . 3)
+         (projects . 3)
+         (registers . 3)))
+ (setq dashboard-item-shortcuts
+       '((recents . "r")
+         (bookmarks . "m")
+         (projects . "p")
+         (agenda . "a")
+         (registers . "e")))
+ :custom
+ (dashboard-footer-messages '("From freedom came elegance!" "Where there is a shell, there is a way" "There's no place like 127.0.0.1" "Free as in freedom" "If you can read this, Xorg is still working" "Powered by Gentoo" "Powered by GNU/Linux" "u like regex.. dont u?" "Richard Stallman is proud of you" "“Talk is cheap. Show me the code.” \n         - Linus Torvalds" "“Well, what is a computer? A computer is a universal machine.” \n                       - Richard Stallman" "UNIX! Live Free or Die" "Linux is user friendly. It's just very picky about who its friends are." " “Intelligence is the ability to avoid doing work, yet getting the work done.” \n                               - Linus Torvalds" "Monolithic Multipurpose Xenodochial Xsystem" "Keep it simple, stupid!" "the quieter you become, the more you are able to hear" "Designed for GNU/Linux" "Certified for Microsoft© Windows™" "Certified for Windows Vista™" "Compatible with Windows®7" "Works with Windows Vista™" "Microsoft© Windows™ Capable" "Emacs is written in Lisp, which is the only computer language that is beautiful" "I showed you my source code, plz respond" "Configured by mpetco" "8MBs and constantly swapping" "a great operating system, lacking only a decent editor" "Eight Megabytes and Constantly Swapping" "Escape Meta Alt Control Shift" "EMACS Makes Any Computer Slow" "Eventually Munches All Computer Storage" "Generally Not Used, Except by Middle-Aged Computer Scientists" "How do you generate a random string? \n Put a web designer in front of vim" "vim is the leading cause of arthritis" "Given enough eyeballs all bugs are shallow" "“An idiot admires complexity, a genius admires simplicity”" "A great lisp interpreter" "lisp machine reference goes here" "lisp mathematical notation reference goes here" "The Optimus Programus" "Before There Was GCC, There Was Emacs" "The UNIX philosophy at it's finest" "The First Program, even before GCC" "Born in the Time of Terminals, Thriving still" "The One Editor to Rule Them All" "Eigth Wonder of the Coding World" "When RMS Dreamt in Lisp" "The UNIX Way, Amplified" "vim is a plugin" "Pure Lisp, Pure Bliss" "In Unix We Trust, in Emacs We Code" "A Pipe is Only as Strong as its Editor" "The Supreme Editor (by Decree)" "The Emperor's New Editor" "Bhraman in Lisp" "The Code of Daedulus" "The Tao of the computer" "the IDE of the project" "Pontifex sexpius"))
+ (dashboard-footer-icon nil)
+ (dashboard-modify-heading-icons
+  '((recents . "file-text") (bookmarks . "book")))
+ :config
+ (add-hook
+  'elpaca-after-init-hook #'dashboard-insert-startupify-lists)
+ (add-hook 'elpaca-after-init-hook #'dashboard-initialize)
+ (dashboard-setup-startup-hook))
 #+end_src
 
 * DESKTOP-SAVE
@@ -244,6 +306,12 @@ Desktop Save Mode is a feature to save the state of Emacs from one session to an
 ;;(desktop-save-mode t)
 ;;(setq desktop-auto-save-timeout 180)
 #+end_src
+
+* DIMINISH
+This package implements hiding or abbreviation of the modeline displays (lighters) of minor-modes. With this package installed, you can add ‘:diminish’ to any use-package block to hide that particular mode in the modeline.
+#+begin_src emacs-lisp
+(use-package diminish)
+#+end_src 
 
 * DIRED
 dired table with dired usage commands rename move delete eetc
@@ -533,73 +601,51 @@ D - delete
   (doom-modeline-before-update-env-hook nil)
   (doom-modeline-after-update-env-hook nil))
 #+end_src
-* DAP
-** DAP-MODE
-#+begin_src
-(use-package dap-mode)
+
+* EAF
+i dont like this project
+#+begin_src emacs-lisp
+;;(use-package eaf :ensure '(eaf :host github :repo "emacs-eaf/emacs-application-framework") :load-path "~/.config/emacs/site-lisp/emacs-application-framework`")
 #+end_src
 
-* DASHBOARD
-# NOT CONFIGURED ADD PROJECTS FROM THAT FILE
+* EASY-PG
 #+begin_src emacs-lisp
-(use-package
- dashboard
- :ensure t
- :init
- (setq initial-buffer-choice 'dashboard-open)
- (setq dashboard-set-heading-icons t)
- (setq dashboard-set-file-icons t)
- (setq dashboard-banner-logo-title "the extensible self-documenting integrated computing environment") ;; the first program, even before GCC, the optimus programus
- ;; rewrite this 
- ;;(defun dashboard-title ()
-    ;;(let ((smaller-version 
-	   ;;(replace-regexp-in-string (rx " (" (zero-or-more any) eol) "" (emacs-version))
-	   ;;(replace-regexp-in-string (rx "2025" (zero-or-more any) eol) "" (emacs-version))))
-      ;;(string-replace "\n" "" smaller-version) 
-;;)
-;;)
- ;;(setq dashboard-banner-logo-title (format "%s" (dashboard-title)))
- (setq dashboard-startup-banner "~/.config/emacs/dashboard-images/emacs.png") ;; use standard emacs logo as banner
- (setq dashboard-center-content t) ;; set to 't' for centered content
- (setq dashboard-items
-       '((recents . 5)
-         (agenda . 5)
-         (bookmarks . 3)
-         (projects . 3)
-         (registers . 3)))
- (setq dashboard-item-shortcuts
-       '((recents . "r")
-         (bookmarks . "m")
-         (projects . "p")
-         (agenda . "a")
-         (registers . "e")))
- :custom
- (dashboard-footer-messages '("From freedom came elegance!" "Where there is a shell, there is a way" "There's no place like 127.0.0.1" "Free as in freedom" "If you can read this, Xorg is still working" "Powered by Gentoo" "Powered by GNU/Linux" "u like regex.. dont u?" "Richard Stallman is proud of you" "“Talk is cheap. Show me the code.” \n         - Linus Torvalds" "“Well, what is a computer? A computer is a universal machine.” \n                       - Richard Stallman" "UNIX! Live Free or Die" "Linux is user friendly. It's just very picky about who its friends are." " “Intelligence is the ability to avoid doing work, yet getting the work done.” \n                               - Linus Torvalds" "Monolithic Multipurpose Xenodochial Xsystem" "Keep it simple, stupid!" "the quieter you become, the more you are able to hear" "Designed for GNU/Linux" "Certified for Microsoft© Windows™" "Certified for Windows Vista™" "Compatible with Windows®7" "Works with Windows Vista™" "Microsoft© Windows™ Capable" "Emacs is written in Lisp, which is the only computer language that is beautiful" "I showed you my source code, plz respond" "Configured by mpetco" "8MBs and constantly swapping" "a great operating system, lacking only a decent editor" "Eight Megabytes and Constantly Swapping" "Escape Meta Alt Control Shift" "EMACS Makes Any Computer Slow" "Eventually Munches All Computer Storage" "Generally Not Used, Except by Middle-Aged Computer Scientists" "How do you generate a random string? \n Put a web designer in front of vim" "vim is the leading cause of arthritis" "Given enough eyeballs all bugs are shallow" "“An idiot admires complexity, a genius admires simplicity”" "A great lisp interpreter" "lisp machine reference goes here" "lisp mathematical notation reference goes here" "The Optimus Programus" "Before There Was GCC, There Was Emacs" "The UNIX philosophy at it's finest" "The First Program, even before GCC" "Born in the Time of Terminals, Thriving still" "The One Editor to Rule Them All" "Eigth Wonder of the Coding World" "When RMS Dreamt in Lisp" "The UNIX Way, Amplified" "vim is a plugin" "Pure Lisp, Pure Bliss" "In Unix We Trust, in Emacs We Code" "A Pipe is Only as Strong as its Editor" "The Supreme Editor (by Decree)" "The Emperor's New Editor" "Bhraman in Lisp" "The Code of Daedulus" "The Tao of the computer" "the IDE of the project" "Pontifex sexpius"))
- (dashboard-footer-icon nil)
- (dashboard-modify-heading-icons
-  '((recents . "file-text") (bookmarks . "book")))
- :config
- (add-hook
-  'elpaca-after-init-hook #'dashboard-insert-startupify-lists)
- (add-hook 'elpaca-after-init-hook #'dashboard-initialize)
- (dashboard-setup-startup-hook))
-#+end_src
-
-* DIMINISH
-This package implements hiding or abbreviation of the modeline displays (lighters) of minor-modes. With this package installed, you can add ‘:diminish’ to any use-package block to hide that particular mode in the modeline.
-#+begin_src emacs-lisp
-(use-package diminish)
-#+end_src 
-
-* ELPHER
-#+begin_src emacs-lisp
-(use-package elpher)
+(setq epa-pinentry-mode 'loopback)
 #+end_src
 
 * EAT
 eat is way better than vterm imo, eat line mode is for pasting 
 #+begin_src emacs-lisp
 (use-package eat)
+#+end_src
+
+* EGLOT
+#+begin_src emacs-lisp
+(use-package
+ eglot
+ :ensure t
+ :config
+ (add-to-list 'eglot-server-programs '(c-mode . ("clangd")))
+ (add-to-list 'eglot-server-programs '(c++-mode . ("clangd")))
+ (add-to-list 'eglot-server-programs '(latex-mode . ("texlab")))
+ (add-hook 'c-mode-hook 'eglot-ensure)
+ (add-hook 'c++-mode-hook 'eglot-ensure)
+ (add-hook 'latex-mode-hook 'eglot-ensure)
+ ;; this fixes a bug, https://github.com/joaotavora/eglot/discussions/1127 https://www.reddit.com/r/emacs/comments/175moy8/eglot_gets_out_of_sync_from_the_buffer_and/
+ (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
+ (advice-add 'eglot-completion-at-point :around #'cape-wrap-noninterruptible))
+
+(use-package jsonrpc)
+#+end_src
+
+* EMBARK
+#+begin_src emacs-lisp
+(use-package embark)
+#+end_src
+
+** EMBARK-CONSULT
+#+begin_src emacs-lisp
+(use-package embark-consult)
 #+end_src
 
 * EMMS
@@ -609,10 +655,169 @@ eat is way better than vterm imo, eat line mode is for pasting
 (setq emms-player-list '(emms-player-mpv)))
 #+end_src
 
-* EAF
-i dont like this project
+* ELFEED
+The functions are taken from this guide https://www.bardman.dev/technology/elfeed.
 #+begin_src emacs-lisp
-;;(use-package eaf :ensure '(eaf :host github :repo "emacs-eaf/emacs-application-framework") :load-path "~/.config/emacs/site-lisp/emacs-application-framework`")
+(use-package
+ elfeed
+ :config
+ (setq elfeed-db-directory "~/.cache/elfeed/")
+
+  (defun play-elfeed-video ()
+  "Play the URL of the entry at point in mpv if it's a YouTube video."
+  (interactive)
+  (let ((entry (elfeed-search-selected :single)))
+    (if entry
+        (let ((url (elfeed-entry-link entry)))
+          (if (and url (string-match-p "https?://\\(www\\.\\)?youtube\\.com\\|youtu\\.be" url))
+              (progn
+                (shell-command (format "mpv '%s'" url))
+                (elfeed-search-untag-all-unread))
+            (message "The URL is not a YouTube link: %s" url)))
+      (message "No entry selected in Elfeed."))))
+
+  (defun play-elfeed-video2electric ()
+  "Play the URL of the entry at point in mpv if it's a YouTube video."
+  (interactive)
+  (let ((entry (elfeed-search-selected :single)))
+    (if entry
+        (let ((url (elfeed-entry-link entry)))
+          (if (and url (string-match-p "https?://\\(www\\.\\)?youtube\\.com\\|youtu\\.be" url))
+              (progn
+                (start-process "watch" nil (format "mpv '%s'" url))
+                (elfeed-search-untag-all-unread))
+            (message "The URL is not a YouTube link: %s" url)))
+      (message "No entry selected in Elfeed."))))
+
+  (defun bard/add-video-emms-queue ()
+    "Play the URL of the entry at point in mpv if it's a YouTube video. Add it to EMMS queue."
+    (interactive)
+    (let ((entry (elfeed-search-selected :single)))
+      (if entry
+          (let ((url (elfeed-entry-link entry)))
+            (if (and url (string-match-p "https?://\\(www\\.\\)?youtube\\.com\\|youtu\\.be" url))
+                (let* ((playlist-name "Watch Later")
+                       (playlist-buffer (get-buffer (format " *%s*" playlist-name))))
+                  (unless playlist-buffer
+                    (setq playlist-buffer (emms-playlist-new (format " *%s*" playlist-name))))
+                  (emms-playlist-set-playlist-buffer playlist-buffer)
+                  (emms-add-url url)
+                  (elfeed-search-untag-all-unread)
+                  (message "Added YouTube video to EMMS playlist: %s" url))
+              (message "The URL is not a YouTube link: %s" url)))
+        (message "No entry selected in Elfeed."))))
+
+)
+#+end_src
+
+** ELFEED-ORG
+#+begin_src emacs-lisp
+(use-package elfeed-org :config (elfeed-org) (setq rmh-elfeed-org-files (list "~/.config/emacs/elfeed.org.gpg")))
+#+end_src
+
+* ELLAMA
+#+begin_src emacs-lisp
+(use-package ellama
+  :ensure t
+  :bind ("C-c e" . ellama-transient-main-menu)
+  ;; send last message in chat buffer with C-c C-c
+  :hook (org-ctrl-c-ctrl-c-final . ellama-chat-send-last-message)
+  :init (setopt ellama-auto-scroll t)
+  :config
+  ;; show ellama context in header line in all buffers
+  (ellama-context-header-line-global-mode +1))
+#+end_src
+
+* ELPHER
+#+begin_src emacs-lisp
+(use-package elpher)
+#+end_src
+
+* ERC
+ERC is a powerful, modular, and extensible Internet Relay Chat client distributed with GNU Emacs.
+#+begin_src emacs-lisp
+(require 'erc)
+(add-hook 'erc-mode 'erc-autojoin-mode)
+
+(setq
+ erc-server '(("irc.libera.chat" "irc.oftc.net"))
+ erc-nick "JuvenilePrinceps"
+ erc-user-full-name "Emacs User"
+ erc-default-port "6697"
+ erc-track-shorten-start 8 ;; minmum number of characters for a channel name in the modeline
+ erc-autojoin-channels-alist '(("irc.libera.chat" "#gentoo" "#emacs" "#gnu" "#bitcoin" "#linux" "#sysadmin" "#uncyclopedia" "#lisp"))
+ erc-kill-buffer-on-part t ;; kills buffer when you run the part (leave channel) command
+ erc-auto-query 'bury) ;; create a query buffer every time you recieve a private message
+
+(setq
+ erc-fill-column 120 ;; the column at which a paragraph is broken
+ erc-fill-function 'erc-fill-static
+ erc-fill-static-center 20)
+
+(setq
+ erc-track-exclude '("#windows")
+ erc-track-exclude-types '("JOIN" "NICK" "QUIT" "MODE" "AWAY") ;; list of messages to be ignored
+ erc-hide-list '("JOIN" "NICK" "QUIT" "MODE" "AWAY") ;; message types to hide
+ erc-track-exclude-server-buffer t)
+
+(setq erc-track-visibility nil) ;; Only use the current frame for visibility
+
+;; Tracking specific keywords or people
+;; (setq erc-pals '("shom_" "masteroman" "benoitj")
+;;             erc-fools '("daviwil-test")
+;;             erc-keywords '("guix" "wiki"))
+
+;; Desktop notifications for matches/mentions
+(add-to-list 'erc-modules 'notifications)
+
+;; Check spelling of messages
+;; (add-to-list 'erc-modules 'spelling)
+
+;; List active user's nicks in a side window 
+(add-to-list 'erc-modules 'nickbar)
+
+;; Uniquely colorize nicknames in chat
+(add-to-list 'erc-modules 'nicks)
+
+;; Displaying inline images
+;;(use-package erc-image
+;;  :ensure t
+;;  :after erc
+;;  :config
+;;  (setq erc-image-inline-rescale 300)
+;;  (add-to-list 'erc-modules 'image))
+
+;;(setq erc-track-enable-keybindings t)
+
+(setq erc-prompt-for-password nil)
+#+end_src
+
+* EVIL 
+# add in :hook after-init for evil stuff https://github.com/jamescherti/minimal-emacs.d?tab=readme-ov-file#how-to-configure-vim-keybindings-using-evil
+#+begin_src emacs-lisp
+(use-package
+ evil
+ :init ;; tweak evil's configuration before loading it
+ (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
+ (setq evil-want-keybinding nil)
+ (setq evil-vsplit-window-right t)
+ (setq evil-split-window-below t)
+ (setq evil-undo-system 'undo-fu)
+ (setq evil-want-C-u-scroll t)
+ (evil-mode))
+
+(use-package
+ evil-collection
+ :after evil
+ :config
+ ;;(setq evil-collection-mode-list '(dashboard dired ibuffer neotree magit vundo doc-view help elpaca package-menu buff-menu imenu buffer apropos cmake-mode snake tetris vterm vertico corfu eat eww))
+ (evil-collection-init))
+
+(use-package evil-tutor)
+#+end_src
+** Disable viper 
+#+begin_src emacs-lisp
+(use-package viper :disabled)
 #+end_src
 
 * EXWM
@@ -721,203 +926,6 @@ i dont like this project
 (add-hook 'exwm-init-hook 'exwm-modeline-mode)
 #+end_src
 
-* ERC
-ERC is a powerful, modular, and extensible Internet Relay Chat client distributed with GNU Emacs.
-#+begin_src emacs-lisp
-(require 'erc)
-(add-hook 'erc-mode 'erc-autojoin-mode)
-
-(setq
- erc-server '(("irc.libera.chat" "irc.oftc.net"))
- erc-nick "JuvenilePrinceps"
- erc-user-full-name "Emacs User"
- erc-default-port "6697"
- erc-track-shorten-start 8 ;; minmum number of characters for a channel name in the modeline
- erc-autojoin-channels-alist '(("irc.libera.chat" "#gentoo" "#emacs" "#gnu" "#bitcoin" "#linux" "#sysadmin" "#uncyclopedia" "#lisp"))
- erc-kill-buffer-on-part t ;; kills buffer when you run the part (leave channel) command
- erc-auto-query 'bury) ;; create a query buffer every time you recieve a private message
-
-(setq
- erc-fill-column 120 ;; the column at which a paragraph is broken
- erc-fill-function 'erc-fill-static
- erc-fill-static-center 20)
-
-(setq
- erc-track-exclude '("#windows")
- erc-track-exclude-types '("JOIN" "NICK" "QUIT" "MODE" "AWAY") ;; list of messages to be ignored
- erc-hide-list '("JOIN" "NICK" "QUIT" "MODE" "AWAY") ;; message types to hide
- erc-track-exclude-server-buffer t)
-
-(setq erc-track-visibility nil) ;; Only use the current frame for visibility
-
-;; Tracking specific keywords or people
-;; (setq erc-pals '("shom_" "masteroman" "benoitj")
-;;             erc-fools '("daviwil-test")
-;;             erc-keywords '("guix" "wiki"))
-
-;; Desktop notifications for matches/mentions
-(add-to-list 'erc-modules 'notifications)
-
-;; Check spelling of messages
-;; (add-to-list 'erc-modules 'spelling)
-
-;; List active user's nicks in a side window 
-(add-to-list 'erc-modules 'nickbar)
-
-;; Uniquely colorize nicknames in chat
-(add-to-list 'erc-modules 'nicks)
-
-;; Displaying inline images
-;;(use-package erc-image
-;;  :ensure t
-;;  :after erc
-;;  :config
-;;  (setq erc-image-inline-rescale 300)
-;;  (add-to-list 'erc-modules 'image))
-
-;;(setq erc-track-enable-keybindings t)
-
-(setq erc-prompt-for-password nil)
-#+end_src
-
-* ELFEED
-The functions are taken from this guide https://www.bardman.dev/technology/elfeed.
-#+begin_src emacs-lisp
-(use-package
- elfeed
- :config
- (setq elfeed-db-directory "~/.cache/elfeed/")
-
-  (defun play-elfeed-video ()
-  "Play the URL of the entry at point in mpv if it's a YouTube video."
-  (interactive)
-  (let ((entry (elfeed-search-selected :single)))
-    (if entry
-        (let ((url (elfeed-entry-link entry)))
-          (if (and url (string-match-p "https?://\\(www\\.\\)?youtube\\.com\\|youtu\\.be" url))
-              (progn
-                (shell-command (format "mpv '%s'" url))
-                (elfeed-search-untag-all-unread))
-            (message "The URL is not a YouTube link: %s" url)))
-      (message "No entry selected in Elfeed."))))
-
-  (defun play-elfeed-video2electric ()
-  "Play the URL of the entry at point in mpv if it's a YouTube video."
-  (interactive)
-  (let ((entry (elfeed-search-selected :single)))
-    (if entry
-        (let ((url (elfeed-entry-link entry)))
-          (if (and url (string-match-p "https?://\\(www\\.\\)?youtube\\.com\\|youtu\\.be" url))
-              (progn
-                (start-process "watch" nil (format "mpv '%s'" url))
-                (elfeed-search-untag-all-unread))
-            (message "The URL is not a YouTube link: %s" url)))
-      (message "No entry selected in Elfeed."))))
-
-  (defun bard/add-video-emms-queue ()
-    "Play the URL of the entry at point in mpv if it's a YouTube video. Add it to EMMS queue."
-    (interactive)
-    (let ((entry (elfeed-search-selected :single)))
-      (if entry
-          (let ((url (elfeed-entry-link entry)))
-            (if (and url (string-match-p "https?://\\(www\\.\\)?youtube\\.com\\|youtu\\.be" url))
-                (let* ((playlist-name "Watch Later")
-                       (playlist-buffer (get-buffer (format " *%s*" playlist-name))))
-                  (unless playlist-buffer
-                    (setq playlist-buffer (emms-playlist-new (format " *%s*" playlist-name))))
-                  (emms-playlist-set-playlist-buffer playlist-buffer)
-                  (emms-add-url url)
-                  (elfeed-search-untag-all-unread)
-                  (message "Added YouTube video to EMMS playlist: %s" url))
-              (message "The URL is not a YouTube link: %s" url)))
-        (message "No entry selected in Elfeed."))))
-
-)
-#+end_src
-
-** ELFEED-ORG
-#+begin_src emacs-lisp
-(use-package elfeed-org :config (elfeed-org) (setq rmh-elfeed-org-files (list "~/.config/emacs/elfeed.org.gpg")))
-#+end_src
-
-* ELLAMA
-#+begin_src emacs-lisp
-(use-package ellama
-  :ensure t
-  :bind ("C-c e" . ellama-transient-main-menu)
-  ;; send last message in chat buffer with C-c C-c
-  :hook (org-ctrl-c-ctrl-c-final . ellama-chat-send-last-message)
-  :init (setopt ellama-auto-scroll t)
-  :config
-  ;; show ellama context in header line in all buffers
-  (ellama-context-header-line-global-mode +1))
-#+end_src
-
-* EGLOT
-#+begin_src emacs-lisp
-(use-package
- eglot
- :ensure t
- :config
- (add-to-list 'eglot-server-programs '(c-mode . ("clangd")))
- (add-to-list 'eglot-server-programs '(c++-mode . ("clangd")))
- (add-to-list 'eglot-server-programs '(latex-mode . ("texlab")))
- (add-hook 'c-mode-hook 'eglot-ensure)
- (add-hook 'c++-mode-hook 'eglot-ensure)
- (add-hook 'latex-mode-hook 'eglot-ensure)
- ;; this fixes a bug, https://github.com/joaotavora/eglot/discussions/1127 https://www.reddit.com/r/emacs/comments/175moy8/eglot_gets_out_of_sync_from_the_buffer_and/
- (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
- (advice-add 'eglot-completion-at-point :around #'cape-wrap-noninterruptible))
-
-(use-package jsonrpc)
-#+end_src
-
-* EVIL 
-# add in :hook after-init for evil stuff https://github.com/jamescherti/minimal-emacs.d?tab=readme-ov-file#how-to-configure-vim-keybindings-using-evil
-#+begin_src emacs-lisp
-(use-package
- evil
- :init ;; tweak evil's configuration before loading it
- (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
- (setq evil-want-keybinding nil)
- (setq evil-vsplit-window-right t)
- (setq evil-split-window-below t)
- (setq evil-undo-system 'undo-fu)
- (setq evil-want-C-u-scroll t)
- (evil-mode))
-
-(use-package
- evil-collection
- :after evil
- :config
- ;;(setq evil-collection-mode-list '(dashboard dired ibuffer neotree magit vundo doc-view help elpaca package-menu buff-menu imenu buffer apropos cmake-mode snake tetris vterm vertico corfu eat eww))
- (evil-collection-init))
-
-(use-package evil-tutor)
-#+end_src
-** Disable viper 
-#+begin_src emacs-lisp
-(use-package viper :disabled)
-#+end_src
-
-* EMBARK
-#+begin_src emacs-lisp
-(use-package embark)
-#+end_src
-
-** EMBARK-CONSULT
-#+begin_src emacs-lisp
-(use-package embark-consult)
-#+end_src
-
-* FORMATTERS
-** elisp-autofmt
-#+begin_src emacs-lisp
-(use-package elisp-autofmt
-     :config 
-     (setq elisp-autofmt-python-bin "/usr/bin/python3.13"))
-#+end_src
-
 * FLYCHECK
 #+begin_src emacs-lisp
 (use-package
@@ -971,9 +979,12 @@ The functions are taken from this guide https://www.bardman.dev/technology/elfee
 (global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
 #+end_src
 
-* EASY-PG
+* FORMATTERS
+** elisp-autofmt
 #+begin_src emacs-lisp
-(setq epa-pinentry-mode 'loopback)
+(use-package elisp-autofmt
+     :config 
+     (setq elisp-autofmt-python-bin "/usr/bin/python3.13"))
 #+end_src
 
 * GENERAL 
@@ -1196,34 +1207,6 @@ The functions are taken from this guide https://www.bardman.dev/technology/elfee
 ;; (define-key global-map (kbd "C-.") 'company-files)
 #+end_src
 
-* GIT
-Git related plugins are here
-** Git Time Machine
-#+begin_src emacs-lisp
-(use-package git-timemachine
-  :after git-timemachine
-  :hook (evil-normalize-keymaps . git-timemachine-hook)
-  :config
-    (evil-define-key 'normal git-timemachine-mode-map (kbd "C-j") 'git-timemachine-show-previous-revision)
-    (evil-define-key 'normal git-timemachine-mode-map (kbd "C-k") 'git-timemachine-show-next-revision)
-)
-#+end_src
-** Magit
-Magit is like the
-#+begin_src emacs-lisp
-(use-package
- magit
- :custom
- (vc-handled-backends nil)
- (magit-section-initial-visibility-alist '((untracked . show))))
-#+end_src
-
-** Git gutter
-# not configured + bugs
-#+begin_src emacs-lisp
-(use-package git-gutter :hook (prog-mode . git-gutter))
-#+end_src
-
 * GETTINGS THINGS DONE
 This section covers some configuration of org mode and org agenda so you get a GTD-esque experience. It's based off of this guide https://www.labri.fr/perso/nrougier/GTD/index.html by Nicolas P. Rougier.
 
@@ -1308,6 +1291,36 @@ This section covers some configuration of org mode and org agenda so you get a G
                 ((org-agenda-overriding-header "\nCompleted today\n")))))))
 #+end_src
 
+* GIT
+Git related plugins are here
+** Git Time Machine
+#+begin_src emacs-lisp
+(use-package git-timemachine
+  :after git-timemachine
+  :hook (evil-normalize-keymaps . git-timemachine-hook)
+  :config
+    (evil-define-key 'normal git-timemachine-mode-map (kbd "C-j") 'git-timemachine-show-previous-revision)
+    (evil-define-key 'normal git-timemachine-mode-map (kbd "C-k") 'git-timemachine-show-next-revision)
+)
+#+end_src
+** Magit
+Magit is like the
+#+begin_src emacs-lisp
+(use-package
+ magit
+ :custom
+ (vc-handled-backends nil)
+ (magit-section-initial-visibility-alist '((untracked . show)))
+ :config
+ (add-hook 'magit-process-find-password-functions 'magit-process-password-auth-source)) ;; automatically find git credentials, the first function doesnt exist so i have no idea how this works
+#+end_src
+
+** Git gutter
+# not configured + bugs
+#+begin_src emacs-lisp
+(use-package git-gutter :hook (prog-mode . git-gutter))
+#+end_src
+
 * GRAPHICAL USER INTERFACE TWEAKS
 ** Disable Menubar, Toolbars and Scrollbars
 #+begin_src emacs-lisp
@@ -1326,6 +1339,13 @@ This section covers some configuration of org mode and org agenda so you get a G
 ** Enable short answers
 #+begin_src emacs-lisp
 (setopt use-short-answers t)
+#+end_src
+
+* LANGUAGE SUPPORT
+Emacs has built-in programming language modes for Lisp, Scheme, DSSSL, Ada, ASM, AWK, C, C++, Fortran, Icon, IDL (CORBA), IDLWAVE, Java, Javascript, M4, Makefiles, Metafont, Modula2, Object Pascal, Objective-C, Octave, Pascal, Perl, Pike, PostScript, Prolog, Python, Ruby, Simula, SQL, Tcl, Verilog, and VHDL. Other languages will require you to install additional modes.
+#+begin_src emacs-lisp
+;;(use-package lua-mode)
+;;(use-package haskell-mode)
 #+end_src
 
 * LATEX
@@ -1348,25 +1368,14 @@ theres probably a better way to do this
 (add-to-list 'auto-mode-alist '("\\.pdf\\'" . doc-view-mode))
 #+end_src
 
-* LANGUAGE SUPPORT
-Emacs has built-in programming language modes for Lisp, Scheme, DSSSL, Ada, ASM, AWK, C, C++, Fortran, Icon, IDL (CORBA), IDLWAVE, Java, Javascript, M4, Makefiles, Metafont, Modula2, Object Pascal, Objective-C, Octave, Pascal, Perl, Pike, PostScript, Prolog, Python, Ruby, Simula, SQL, Tcl, Verilog, and VHDL. Other languages will require you to install additional modes.
-#+begin_src emacs-lisp
-;;(use-package lua-mode)
-;;(use-package haskell-mode)
-#+end_src
-
-* MULE
-#+begin_src emacs-lisp
-;;(use-package mule)
-#+end_src
-* MISC TESTING
-#+begin_src emacs-lisp
-;;(use-package nyan-mode)
-#+end_src
-
 * MARGINALIA
 #+begin_src emacs-lisp
 (use-package marginalia :ensure t :config (marginalia-mode))
+#+end_src
+
+* MISC TESTING
+#+begin_src emacs-lisp
+;;(use-package nyan-mode)
 #+end_src
 
 * MODES
@@ -1382,10 +1391,11 @@ Emacs has built-in programming language modes for Lisp, Scheme, DSSSL, Ada, ASM,
 (add-hook 'c-mode-hook #'(lambda () (hs-minor-mode 1)))
 #+end_src
 
-* WEATHER-SCOUT
+* MULE
 #+begin_src emacs-lisp
-(use-package weather-scout :ensure (:host github :repo "hsolg/emacs-weather-scout"))
+;;(use-package mule)
 #+end_src
+
 
 * NEOTREE
 Neotree is a file tree viewer.  When you open neotree, it jumps to the current file thanks to neo-smart-open.  The neo-window-fixed-size setting makes the neotree width be adjustable.  NeoTree provides following themes: classic, ascii, arrow, icons, and nerd.  Theme can be config'd by setting "two" themes for neo-theme: one for the GUI and one for the terminal.  I like to use 'SPC t' for 'toggle' keybindings, so I have used 'SPC t n' for toggle-neotree.
@@ -1609,14 +1619,38 @@ This enables <q and <s behavior for blocks, org-tempo is not a separate package 
 (use-package org-download) ;;:config (setq org-download-image-dir "~/Notes/.images/"))
 (setq org-download-image-dir "~/Notes/.images/")
 #+end_src
-* SMARTPARENS
+* PROJECTILE
+Projectile is a project interaction library for emacs
+
++----------------------+---------------------------+-------------------+
+| COMMAND              | DESCRIPTION               | KEYBINDING        |
++----------------------+---------------------------+-------------------+
+| projectile-find-file | /Find a file in a project/  | SPC p f           |
++-----------------------------+--------+--------+
+| projectile-switch-to-buffer | /Switch to a different project buffer/        | SPC p b       |
++--------+--------+--------+
+| grep search in project       |        |        |
++--------+--------+--------+
+| kill close project buffers       |        |        |
++--------+--------+--------+
+| recent files in project        |        |        |
++--------+--------+--------+
+|         |        |        |
++--------+--------+--------+
+|        |        |        |
++--------+--------+--------+
+|        |        |        |
++--------+--------+--------+
+|        |        |        |
++--------+--------+--------+
+
+
 #+begin_src emacs-lisp
+(use-package ripgrep)
 (use-package
- smartparens
- :ensure t
- :defer t
- :hook (prog-mode eglot org-mode latex-mode)
- :config (require 'smartparens-config))
+ projectile
+ :config
+ (projectile-mode 1))
 #+end_src
 
 * SAVEHIST
@@ -1721,6 +1755,16 @@ eshell is an emacs 'shell' written in elisp
 	(evil-define-key 'normal vterm-mode-map (kbd "<return>") #'evil-insert-resume))
 #+end_src
 
+* SMARTPARENS
+#+begin_src emacs-lisp
+(use-package
+ smartparens
+ :ensure t
+ :defer t
+ :hook (prog-mode eglot org-mode latex-mode)
+ :config (require 'smartparens-config))
+#+end_src
+
 * SNIPPETS
 NOT CONFIGURED
 ** Yasnippet
@@ -1755,53 +1799,11 @@ NOT CONFIGURED
 )
 #+end_src
 
-* COLORFUL-MODE
-Preview any color in the buffer.
+* THEME
+# done
+Zenburn is a low-contrast color scheme.
 #+begin_src emacs-lisp
-(use-package colorful-mode
- :ensure t
- :defer t
- :diminish
- :hook ((org-mode prog-mode) . colorful-mode))
-#+end_src
-
-* PROJECTILE
-Projectile is a project interaction library for emacs
-
-+----------------------+---------------------------+-------------------+
-| COMMAND              | DESCRIPTION               | KEYBINDING        |
-+----------------------+---------------------------+-------------------+
-| projectile-find-file | /Find a file in a project/  | SPC p f           |
-+-----------------------------+--------+--------+
-| projectile-switch-to-buffer | /Switch to a different project buffer/        | SPC p b       |
-+--------+--------+--------+
-| grep search in project       |        |        |
-+--------+--------+--------+
-| kill close project buffers       |        |        |
-+--------+--------+--------+
-| recent files in project        |        |        |
-+--------+--------+--------+
-|         |        |        |
-+--------+--------+--------+
-|        |        |        |
-+--------+--------+--------+
-|        |        |        |
-+--------+--------+--------+
-|        |        |        |
-+--------+--------+--------+
-
-
-#+begin_src emacs-lisp
-(use-package ripgrep)
-(use-package
- projectile
- :config
- (projectile-mode 1))
-#+end_src
-
-* TYPIT
-#+begin_src emacs-lisp
-(use-package typit :defer t)
+(use-package zenburn-theme :init (load-theme 'zenburn t))
 #+end_src
 
 * TRANSIENT
@@ -1810,11 +1812,9 @@ Transient is a library used to implement the keyboard-driven “menus” in Magi
 (use-package transient)
 #+end_src
 
-* THEME
-# done
-Zenburn is a low-contrast color scheme.
+* TYPIT
 #+begin_src emacs-lisp
-(use-package zenburn-theme :init (load-theme 'zenburn t))
+(use-package typit :defer t)
 #+end_src
 
 * UNDO
@@ -1884,6 +1884,11 @@ VERTical Interactive COmpletion. Vertico provides a performant and minimalistic 
 ** Vertico packages
 # (use-package vertico-quick :after vertico)
 # (use-package vertico-mouse :after vertico)
+* WEATHER-SCOUT
+#+begin_src emacs-lisp
+(use-package weather-scout :ensure (:host github :repo "hsolg/emacs-weather-scout"))
+#+end_src
+
 * WHICH-KEY
 # done
 ~which-key~ is a minor mode for Emacs that displays the key bindings following your currently entered incomplete command (a prefix) in a popup. 

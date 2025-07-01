@@ -32,6 +32,34 @@
                     (app-launcher-run-app)
                     (delete-frame))))
 
+(use-package
+ cape
+ :ensure t
+ :defer 10
+ :init
+ (add-hook 'completion-at-point-functions #'cape-file) ;; you can complete files /bin/
+ (add-hook 'completion-at-point-functions #'cape-dabbrev) ;; dabbrev pretty cool
+ (add-hook 'completion-at-point-functions #'cape-dict) ;; dabbrev pretty cool
+ (add-hook 'completion-at-point-functions #'yasnippet-capf) ;; yasnippets
+ (add-hook 'completion-at-point-functions #'cape-elisp-block)
+
+(defun my/eglot-capf ()
+  (setq-local completion-at-point-functions
+              (list (cape-capf-super
+                     #'eglot-completion-at-point
+                     #'yasnippet-capf))))
+;; make functions by language so you can enable dabbrev for tex
+;; make yasnippets load sepperately form everything else
+
+(add-hook 'eglot-managed-mode-hook #'my/eglot-capf)
+)
+
+(use-package colorful-mode
+ :ensure t
+ :defer t
+ :diminish
+ :hook ((org-mode prog-mode) . colorful-mode))
+
 (use-package consult)
 
 (use-package
@@ -70,30 +98,52 @@
 (use-package corfu-terminal)
 
 (use-package
- cape
+ dashboard
  :ensure t
- :defer 10
  :init
- (add-hook 'completion-at-point-functions #'cape-file) ;; you can complete files /bin/
- (add-hook 'completion-at-point-functions #'cape-dabbrev) ;; dabbrev pretty cool
- (add-hook 'completion-at-point-functions #'cape-dict) ;; dabbrev pretty cool
- (add-hook 'completion-at-point-functions #'yasnippet-capf) ;; yasnippets
- (add-hook 'completion-at-point-functions #'cape-elisp-block)
-
-(defun my/eglot-capf ()
-  (setq-local completion-at-point-functions
-              (list (cape-capf-super
-                     #'eglot-completion-at-point
-                     #'yasnippet-capf))))
-;; make functions by language so you can enable dabbrev for tex
-;; make yasnippets load sepperately form everything else
-
-(add-hook 'eglot-managed-mode-hook #'my/eglot-capf)
-)
+ (setq initial-buffer-choice 'dashboard-open)
+ (setq dashboard-set-heading-icons t)
+ (setq dashboard-set-file-icons t)
+ (setq dashboard-banner-logo-title "the extensible self-documenting integrated computing environment") ;; the first program, even before GCC, the optimus programus
+ ;; rewrite this 
+ ;;(defun dashboard-title ()
+    ;;(let ((smaller-version 
+	   ;;(replace-regexp-in-string (rx " (" (zero-or-more any) eol) "" (emacs-version))
+	   ;;(replace-regexp-in-string (rx "2025" (zero-or-more any) eol) "" (emacs-version))))
+      ;;(string-replace "\n" "" smaller-version) 
+;;)
+;;)
+ ;;(setq dashboard-banner-logo-title (format "%s" (dashboard-title)))
+ (setq dashboard-startup-banner "~/.config/emacs/dashboard-images/emacs.png") ;; use standard emacs logo as banner
+ (setq dashboard-center-content t) ;; set to 't' for centered content
+ (setq dashboard-items
+       '((recents . 5)
+         (agenda . 5)
+         (bookmarks . 3)
+         (projects . 3)
+         (registers . 3)))
+ (setq dashboard-item-shortcuts
+       '((recents . "r")
+         (bookmarks . "m")
+         (projects . "p")
+         (agenda . "a")
+         (registers . "e")))
+ :custom
+ (dashboard-footer-messages '("From freedom came elegance!" "Where there is a shell, there is a way" "There's no place like 127.0.0.1" "Free as in freedom" "If you can read this, Xorg is still working" "Powered by Gentoo" "Powered by GNU/Linux" "u like regex.. dont u?" "Richard Stallman is proud of you" "“Talk is cheap. Show me the code.” \n         - Linus Torvalds" "“Well, what is a computer? A computer is a universal machine.” \n                       - Richard Stallman" "UNIX! Live Free or Die" "Linux is user friendly. It's just very picky about who its friends are." " “Intelligence is the ability to avoid doing work, yet getting the work done.” \n                               - Linus Torvalds" "Monolithic Multipurpose Xenodochial Xsystem" "Keep it simple, stupid!" "the quieter you become, the more you are able to hear" "Designed for GNU/Linux" "Certified for Microsoft© Windows™" "Certified for Windows Vista™" "Compatible with Windows®7" "Works with Windows Vista™" "Microsoft© Windows™ Capable" "Emacs is written in Lisp, which is the only computer language that is beautiful" "I showed you my source code, plz respond" "Configured by mpetco" "8MBs and constantly swapping" "a great operating system, lacking only a decent editor" "Eight Megabytes and Constantly Swapping" "Escape Meta Alt Control Shift" "EMACS Makes Any Computer Slow" "Eventually Munches All Computer Storage" "Generally Not Used, Except by Middle-Aged Computer Scientists" "How do you generate a random string? \n Put a web designer in front of vim" "vim is the leading cause of arthritis" "Given enough eyeballs all bugs are shallow" "“An idiot admires complexity, a genius admires simplicity”" "A great lisp interpreter" "lisp machine reference goes here" "lisp mathematical notation reference goes here" "The Optimus Programus" "Before There Was GCC, There Was Emacs" "The UNIX philosophy at it's finest" "The First Program, even before GCC" "Born in the Time of Terminals, Thriving still" "The One Editor to Rule Them All" "Eigth Wonder of the Coding World" "When RMS Dreamt in Lisp" "The UNIX Way, Amplified" "vim is a plugin" "Pure Lisp, Pure Bliss" "In Unix We Trust, in Emacs We Code" "A Pipe is Only as Strong as its Editor" "The Supreme Editor (by Decree)" "The Emperor's New Editor" "Bhraman in Lisp" "The Code of Daedulus" "The Tao of the computer" "the IDE of the project" "Pontifex sexpius"))
+ (dashboard-footer-icon nil)
+ (dashboard-modify-heading-icons
+  '((recents . "file-text") (bookmarks . "book")))
+ :config
+ (add-hook
+  'elpaca-after-init-hook #'dashboard-insert-startupify-lists)
+ (add-hook 'elpaca-after-init-hook #'dashboard-initialize)
+ (dashboard-setup-startup-hook))
 
 ;;(require 'desktop)
 ;;(desktop-save-mode t)
 ;;(setq desktop-auto-save-timeout 180)
+
+(use-package diminish)
 
 (use-package dired-open-with :defer t :ensure t)
 ;;(defun dpautoload-function () (message "test")) the functions has to be actually defined fyi
@@ -375,59 +425,177 @@
   (doom-modeline-before-update-env-hook nil)
   (doom-modeline-after-update-env-hook nil))
 
-(use-package
- dashboard
- :ensure t
- :init
- (setq initial-buffer-choice 'dashboard-open)
- (setq dashboard-set-heading-icons t)
- (setq dashboard-set-file-icons t)
- (setq dashboard-banner-logo-title "the extensible self-documenting integrated computing environment") ;; the first program, even before GCC, the optimus programus
- ;; rewrite this 
- ;;(defun dashboard-title ()
-    ;;(let ((smaller-version 
-	   ;;(replace-regexp-in-string (rx " (" (zero-or-more any) eol) "" (emacs-version))
-	   ;;(replace-regexp-in-string (rx "2025" (zero-or-more any) eol) "" (emacs-version))))
-      ;;(string-replace "\n" "" smaller-version) 
-;;)
-;;)
- ;;(setq dashboard-banner-logo-title (format "%s" (dashboard-title)))
- (setq dashboard-startup-banner "~/.config/emacs/dashboard-images/emacs.png") ;; use standard emacs logo as banner
- (setq dashboard-center-content t) ;; set to 't' for centered content
- (setq dashboard-items
-       '((recents . 5)
-         (agenda . 5)
-         (bookmarks . 3)
-         (projects . 3)
-         (registers . 3)))
- (setq dashboard-item-shortcuts
-       '((recents . "r")
-         (bookmarks . "m")
-         (projects . "p")
-         (agenda . "a")
-         (registers . "e")))
- :custom
- (dashboard-footer-messages '("From freedom came elegance!" "Where there is a shell, there is a way" "There's no place like 127.0.0.1" "Free as in freedom" "If you can read this, Xorg is still working" "Powered by Gentoo" "Powered by GNU/Linux" "u like regex.. dont u?" "Richard Stallman is proud of you" "“Talk is cheap. Show me the code.” \n         - Linus Torvalds" "“Well, what is a computer? A computer is a universal machine.” \n                       - Richard Stallman" "UNIX! Live Free or Die" "Linux is user friendly. It's just very picky about who its friends are." " “Intelligence is the ability to avoid doing work, yet getting the work done.” \n                               - Linus Torvalds" "Monolithic Multipurpose Xenodochial Xsystem" "Keep it simple, stupid!" "the quieter you become, the more you are able to hear" "Designed for GNU/Linux" "Certified for Microsoft© Windows™" "Certified for Windows Vista™" "Compatible with Windows®7" "Works with Windows Vista™" "Microsoft© Windows™ Capable" "Emacs is written in Lisp, which is the only computer language that is beautiful" "I showed you my source code, plz respond" "Configured by mpetco" "8MBs and constantly swapping" "a great operating system, lacking only a decent editor" "Eight Megabytes and Constantly Swapping" "Escape Meta Alt Control Shift" "EMACS Makes Any Computer Slow" "Eventually Munches All Computer Storage" "Generally Not Used, Except by Middle-Aged Computer Scientists" "How do you generate a random string? \n Put a web designer in front of vim" "vim is the leading cause of arthritis" "Given enough eyeballs all bugs are shallow" "“An idiot admires complexity, a genius admires simplicity”" "A great lisp interpreter" "lisp machine reference goes here" "lisp mathematical notation reference goes here" "The Optimus Programus" "Before There Was GCC, There Was Emacs" "The UNIX philosophy at it's finest" "The First Program, even before GCC" "Born in the Time of Terminals, Thriving still" "The One Editor to Rule Them All" "Eigth Wonder of the Coding World" "When RMS Dreamt in Lisp" "The UNIX Way, Amplified" "vim is a plugin" "Pure Lisp, Pure Bliss" "In Unix We Trust, in Emacs We Code" "A Pipe is Only as Strong as its Editor" "The Supreme Editor (by Decree)" "The Emperor's New Editor" "Bhraman in Lisp" "The Code of Daedulus" "The Tao of the computer" "the IDE of the project" "Pontifex sexpius"))
- (dashboard-footer-icon nil)
- (dashboard-modify-heading-icons
-  '((recents . "file-text") (bookmarks . "book")))
- :config
- (add-hook
-  'elpaca-after-init-hook #'dashboard-insert-startupify-lists)
- (add-hook 'elpaca-after-init-hook #'dashboard-initialize)
- (dashboard-setup-startup-hook))
+;;(use-package eaf :ensure '(eaf :host github :repo "emacs-eaf/emacs-application-framework") :load-path "~/.config/emacs/site-lisp/emacs-application-framework`")
 
-(use-package diminish)
-
-(use-package elpher)
+(setq epa-pinentry-mode 'loopback)
 
 (use-package eat)
+
+(use-package
+ eglot
+ :ensure t
+ :config
+ (add-to-list 'eglot-server-programs '(c-mode . ("clangd")))
+ (add-to-list 'eglot-server-programs '(c++-mode . ("clangd")))
+ (add-to-list 'eglot-server-programs '(latex-mode . ("texlab")))
+ (add-hook 'c-mode-hook 'eglot-ensure)
+ (add-hook 'c++-mode-hook 'eglot-ensure)
+ (add-hook 'latex-mode-hook 'eglot-ensure)
+ ;; this fixes a bug, https://github.com/joaotavora/eglot/discussions/1127 https://www.reddit.com/r/emacs/comments/175moy8/eglot_gets_out_of_sync_from_the_buffer_and/
+ (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
+ (advice-add 'eglot-completion-at-point :around #'cape-wrap-noninterruptible))
+
+(use-package jsonrpc)
+
+(use-package embark)
+
+(use-package embark-consult)
 
 (use-package emms :config 
   (require 'emms-player-mpv)
 (setq emms-player-list '(emms-player-mpv)))
 
-;;(use-package eaf :ensure '(eaf :host github :repo "emacs-eaf/emacs-application-framework") :load-path "~/.config/emacs/site-lisp/emacs-application-framework`")
+(use-package
+ elfeed
+ :config
+ (setq elfeed-db-directory "~/.cache/elfeed/")
+
+  (defun play-elfeed-video ()
+  "Play the URL of the entry at point in mpv if it's a YouTube video."
+  (interactive)
+  (let ((entry (elfeed-search-selected :single)))
+    (if entry
+        (let ((url (elfeed-entry-link entry)))
+          (if (and url (string-match-p "https?://\\(www\\.\\)?youtube\\.com\\|youtu\\.be" url))
+              (progn
+                (shell-command (format "mpv '%s'" url))
+                (elfeed-search-untag-all-unread))
+            (message "The URL is not a YouTube link: %s" url)))
+      (message "No entry selected in Elfeed."))))
+
+  (defun play-elfeed-video2electric ()
+  "Play the URL of the entry at point in mpv if it's a YouTube video."
+  (interactive)
+  (let ((entry (elfeed-search-selected :single)))
+    (if entry
+        (let ((url (elfeed-entry-link entry)))
+          (if (and url (string-match-p "https?://\\(www\\.\\)?youtube\\.com\\|youtu\\.be" url))
+              (progn
+                (start-process "watch" nil (format "mpv '%s'" url))
+                (elfeed-search-untag-all-unread))
+            (message "The URL is not a YouTube link: %s" url)))
+      (message "No entry selected in Elfeed."))))
+
+  (defun bard/add-video-emms-queue ()
+    "Play the URL of the entry at point in mpv if it's a YouTube video. Add it to EMMS queue."
+    (interactive)
+    (let ((entry (elfeed-search-selected :single)))
+      (if entry
+          (let ((url (elfeed-entry-link entry)))
+            (if (and url (string-match-p "https?://\\(www\\.\\)?youtube\\.com\\|youtu\\.be" url))
+                (let* ((playlist-name "Watch Later")
+                       (playlist-buffer (get-buffer (format " *%s*" playlist-name))))
+                  (unless playlist-buffer
+                    (setq playlist-buffer (emms-playlist-new (format " *%s*" playlist-name))))
+                  (emms-playlist-set-playlist-buffer playlist-buffer)
+                  (emms-add-url url)
+                  (elfeed-search-untag-all-unread)
+                  (message "Added YouTube video to EMMS playlist: %s" url))
+              (message "The URL is not a YouTube link: %s" url)))
+        (message "No entry selected in Elfeed."))))
+
+)
+
+(use-package elfeed-org :config (elfeed-org) (setq rmh-elfeed-org-files (list "~/.config/emacs/elfeed.org.gpg")))
+
+(use-package ellama
+  :ensure t
+  :bind ("C-c e" . ellama-transient-main-menu)
+  ;; send last message in chat buffer with C-c C-c
+  :hook (org-ctrl-c-ctrl-c-final . ellama-chat-send-last-message)
+  :init (setopt ellama-auto-scroll t)
+  :config
+  ;; show ellama context in header line in all buffers
+  (ellama-context-header-line-global-mode +1))
+
+(use-package elpher)
+
+(require 'erc)
+(add-hook 'erc-mode 'erc-autojoin-mode)
+
+(setq
+ erc-server '(("irc.libera.chat" "irc.oftc.net"))
+ erc-nick "JuvenilePrinceps"
+ erc-user-full-name "Emacs User"
+ erc-default-port "6697"
+ erc-track-shorten-start 8 ;; minmum number of characters for a channel name in the modeline
+ erc-autojoin-channels-alist '(("irc.libera.chat" "#gentoo" "#emacs" "#gnu" "#bitcoin" "#linux" "#sysadmin" "#uncyclopedia" "#lisp"))
+ erc-kill-buffer-on-part t ;; kills buffer when you run the part (leave channel) command
+ erc-auto-query 'bury) ;; create a query buffer every time you recieve a private message
+
+(setq
+ erc-fill-column 120 ;; the column at which a paragraph is broken
+ erc-fill-function 'erc-fill-static
+ erc-fill-static-center 20)
+
+(setq
+ erc-track-exclude '("#windows")
+ erc-track-exclude-types '("JOIN" "NICK" "QUIT" "MODE" "AWAY") ;; list of messages to be ignored
+ erc-hide-list '("JOIN" "NICK" "QUIT" "MODE" "AWAY") ;; message types to hide
+ erc-track-exclude-server-buffer t)
+
+(setq erc-track-visibility nil) ;; Only use the current frame for visibility
+
+;; Tracking specific keywords or people
+;; (setq erc-pals '("shom_" "masteroman" "benoitj")
+;;             erc-fools '("daviwil-test")
+;;             erc-keywords '("guix" "wiki"))
+
+;; Desktop notifications for matches/mentions
+(add-to-list 'erc-modules 'notifications)
+
+;; Check spelling of messages
+;; (add-to-list 'erc-modules 'spelling)
+
+;; List active user's nicks in a side window 
+(add-to-list 'erc-modules 'nickbar)
+
+;; Uniquely colorize nicknames in chat
+(add-to-list 'erc-modules 'nicks)
+
+;; Displaying inline images
+;;(use-package erc-image
+;;  :ensure t
+;;  :after erc
+;;  :config
+;;  (setq erc-image-inline-rescale 300)
+;;  (add-to-list 'erc-modules 'image))
+
+;;(setq erc-track-enable-keybindings t)
+
+(setq erc-prompt-for-password nil)
+
+(use-package
+ evil
+ :init ;; tweak evil's configuration before loading it
+ (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
+ (setq evil-want-keybinding nil)
+ (setq evil-vsplit-window-right t)
+ (setq evil-split-window-below t)
+ (setq evil-undo-system 'undo-fu)
+ (setq evil-want-C-u-scroll t)
+ (evil-mode))
+
+(use-package
+ evil-collection
+ :after evil
+ :config
+ ;;(setq evil-collection-mode-list '(dashboard dired ibuffer neotree magit vundo doc-view help elpaca package-menu buff-menu imenu buffer apropos cmake-mode snake tetris vterm vertico corfu eat eww))
+ (evil-collection-init))
+
+(use-package evil-tutor)
+
+(use-package viper :disabled)
 
 (defun efs/exwm-update-class ()
   (exwm-workspace-rename-buffer exwm-class-name))
@@ -526,170 +694,6 @@
 
 (add-hook 'exwm-init-hook 'exwm-modeline-mode)
 
-(require 'erc)
-(add-hook 'erc-mode 'erc-autojoin-mode)
-
-(setq
- erc-server '(("irc.libera.chat" "irc.oftc.net"))
- erc-nick "JuvenilePrinceps"
- erc-user-full-name "Emacs User"
- erc-default-port "6697"
- erc-track-shorten-start 8 ;; minmum number of characters for a channel name in the modeline
- erc-autojoin-channels-alist '(("irc.libera.chat" "#gentoo" "#emacs" "#gnu" "#bitcoin" "#linux" "#sysadmin" "#uncyclopedia" "#lisp"))
- erc-kill-buffer-on-part t ;; kills buffer when you run the part (leave channel) command
- erc-auto-query 'bury) ;; create a query buffer every time you recieve a private message
-
-(setq
- erc-fill-column 120 ;; the column at which a paragraph is broken
- erc-fill-function 'erc-fill-static
- erc-fill-static-center 20)
-
-(setq
- erc-track-exclude '("#windows")
- erc-track-exclude-types '("JOIN" "NICK" "QUIT" "MODE" "AWAY") ;; list of messages to be ignored
- erc-hide-list '("JOIN" "NICK" "QUIT" "MODE" "AWAY") ;; message types to hide
- erc-track-exclude-server-buffer t)
-
-(setq erc-track-visibility nil) ;; Only use the current frame for visibility
-
-;; Tracking specific keywords or people
-;; (setq erc-pals '("shom_" "masteroman" "benoitj")
-;;             erc-fools '("daviwil-test")
-;;             erc-keywords '("guix" "wiki"))
-
-;; Desktop notifications for matches/mentions
-(add-to-list 'erc-modules 'notifications)
-
-;; Check spelling of messages
-;; (add-to-list 'erc-modules 'spelling)
-
-;; List active user's nicks in a side window 
-(add-to-list 'erc-modules 'nickbar)
-
-;; Uniquely colorize nicknames in chat
-(add-to-list 'erc-modules 'nicks)
-
-;; Displaying inline images
-;;(use-package erc-image
-;;  :ensure t
-;;  :after erc
-;;  :config
-;;  (setq erc-image-inline-rescale 300)
-;;  (add-to-list 'erc-modules 'image))
-
-;;(setq erc-track-enable-keybindings t)
-
-(setq erc-prompt-for-password nil)
-
-(use-package
- elfeed
- :config
- (setq elfeed-db-directory "~/.cache/elfeed/")
-
-  (defun play-elfeed-video ()
-  "Play the URL of the entry at point in mpv if it's a YouTube video."
-  (interactive)
-  (let ((entry (elfeed-search-selected :single)))
-    (if entry
-        (let ((url (elfeed-entry-link entry)))
-          (if (and url (string-match-p "https?://\\(www\\.\\)?youtube\\.com\\|youtu\\.be" url))
-              (progn
-                (shell-command (format "mpv '%s'" url))
-                (elfeed-search-untag-all-unread))
-            (message "The URL is not a YouTube link: %s" url)))
-      (message "No entry selected in Elfeed."))))
-
-  (defun play-elfeed-video2electric ()
-  "Play the URL of the entry at point in mpv if it's a YouTube video."
-  (interactive)
-  (let ((entry (elfeed-search-selected :single)))
-    (if entry
-        (let ((url (elfeed-entry-link entry)))
-          (if (and url (string-match-p "https?://\\(www\\.\\)?youtube\\.com\\|youtu\\.be" url))
-              (progn
-                (start-process "watch" nil (format "mpv '%s'" url))
-                (elfeed-search-untag-all-unread))
-            (message "The URL is not a YouTube link: %s" url)))
-      (message "No entry selected in Elfeed."))))
-
-  (defun bard/add-video-emms-queue ()
-    "Play the URL of the entry at point in mpv if it's a YouTube video. Add it to EMMS queue."
-    (interactive)
-    (let ((entry (elfeed-search-selected :single)))
-      (if entry
-          (let ((url (elfeed-entry-link entry)))
-            (if (and url (string-match-p "https?://\\(www\\.\\)?youtube\\.com\\|youtu\\.be" url))
-                (let* ((playlist-name "Watch Later")
-                       (playlist-buffer (get-buffer (format " *%s*" playlist-name))))
-                  (unless playlist-buffer
-                    (setq playlist-buffer (emms-playlist-new (format " *%s*" playlist-name))))
-                  (emms-playlist-set-playlist-buffer playlist-buffer)
-                  (emms-add-url url)
-                  (elfeed-search-untag-all-unread)
-                  (message "Added YouTube video to EMMS playlist: %s" url))
-              (message "The URL is not a YouTube link: %s" url)))
-        (message "No entry selected in Elfeed."))))
-
-)
-
-(use-package elfeed-org :config (elfeed-org) (setq rmh-elfeed-org-files (list "~/.config/emacs/elfeed.org.gpg")))
-
-(use-package ellama
-  :ensure t
-  :bind ("C-c e" . ellama-transient-main-menu)
-  ;; send last message in chat buffer with C-c C-c
-  :hook (org-ctrl-c-ctrl-c-final . ellama-chat-send-last-message)
-  :init (setopt ellama-auto-scroll t)
-  :config
-  ;; show ellama context in header line in all buffers
-  (ellama-context-header-line-global-mode +1))
-
-(use-package
- eglot
- :ensure t
- :config
- (add-to-list 'eglot-server-programs '(c-mode . ("clangd")))
- (add-to-list 'eglot-server-programs '(c++-mode . ("clangd")))
- (add-to-list 'eglot-server-programs '(latex-mode . ("texlab")))
- (add-hook 'c-mode-hook 'eglot-ensure)
- (add-hook 'c++-mode-hook 'eglot-ensure)
- (add-hook 'latex-mode-hook 'eglot-ensure)
- ;; this fixes a bug, https://github.com/joaotavora/eglot/discussions/1127 https://www.reddit.com/r/emacs/comments/175moy8/eglot_gets_out_of_sync_from_the_buffer_and/
- (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
- (advice-add 'eglot-completion-at-point :around #'cape-wrap-noninterruptible))
-
-(use-package jsonrpc)
-
-(use-package
- evil
- :init ;; tweak evil's configuration before loading it
- (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
- (setq evil-want-keybinding nil)
- (setq evil-vsplit-window-right t)
- (setq evil-split-window-below t)
- (setq evil-undo-system 'undo-fu)
- (setq evil-want-C-u-scroll t)
- (evil-mode))
-
-(use-package
- evil-collection
- :after evil
- :config
- ;;(setq evil-collection-mode-list '(dashboard dired ibuffer neotree magit vundo doc-view help elpaca package-menu buff-menu imenu buffer apropos cmake-mode snake tetris vterm vertico corfu eat eww))
- (evil-collection-init))
-
-(use-package evil-tutor)
-
-(use-package viper :disabled)
-
-(use-package embark)
-
-(use-package embark-consult)
-
-(use-package elisp-autofmt
-     :config 
-     (setq elisp-autofmt-python-bin "/usr/bin/python3.13"))
-
 (use-package
  flycheck
  :ensure t
@@ -730,7 +734,9 @@
 (global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
 (global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
 
-(setq epa-pinentry-mode 'loopback)
+(use-package elisp-autofmt
+     :config 
+     (setq elisp-autofmt-python-bin "/usr/bin/python3.13"))
 
 (use-package general
   :config
@@ -949,22 +955,6 @@
 
 ;; (define-key global-map (kbd "C-.") 'company-files)
 
-(use-package git-timemachine
-  :after git-timemachine
-  :hook (evil-normalize-keymaps . git-timemachine-hook)
-  :config
-    (evil-define-key 'normal git-timemachine-mode-map (kbd "C-j") 'git-timemachine-show-previous-revision)
-    (evil-define-key 'normal git-timemachine-mode-map (kbd "C-k") 'git-timemachine-show-next-revision)
-)
-
-(use-package
- magit
- :custom
- (vc-handled-backends nil)
- (magit-section-initial-visibility-alist '((untracked . show))))
-
-(use-package git-gutter :hook (prog-mode . git-gutter))
-
 (require 'org)
 
 ;; Files
@@ -1044,6 +1034,24 @@
           (tags "CLOSED>=\"<today>\""
                 ((org-agenda-overriding-header "\nCompleted today\n")))))))
 
+(use-package git-timemachine
+  :after git-timemachine
+  :hook (evil-normalize-keymaps . git-timemachine-hook)
+  :config
+    (evil-define-key 'normal git-timemachine-mode-map (kbd "C-j") 'git-timemachine-show-previous-revision)
+    (evil-define-key 'normal git-timemachine-mode-map (kbd "C-k") 'git-timemachine-show-next-revision)
+)
+
+(use-package
+ magit
+ :custom
+ (vc-handled-backends nil)
+ (magit-section-initial-visibility-alist '((untracked . show)))
+ :config
+ (add-hook 'magit-process-find-password-functions 'magit-process-password-auth-source)) ;; automatically find git credentials, the first function doesnt exist so i have no idea how this works
+
+(use-package git-gutter :hook (prog-mode . git-gutter))
+
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
@@ -1054,6 +1062,9 @@
 
 (setopt use-short-answers t)
 
+;;(use-package lua-mode)
+;;(use-package haskell-mode)
+
 (add-hook 'LaTeX-mode-hook 'lsp)
 (setq TeX-parse-self t)
 ;;(add-to-list 'auto-mode-alist '("\\.tex\\'" . 'lsp))
@@ -1062,21 +1073,16 @@
 
 (add-to-list 'auto-mode-alist '("\\.pdf\\'" . doc-view-mode))
 
-;;(use-package lua-mode)
-;;(use-package haskell-mode)
-
-;;(use-package mule)
+(use-package marginalia :ensure t :config (marginalia-mode))
 
 ;;(use-package nyan-mode)
-
-(use-package marginalia :ensure t :config (marginalia-mode))
 
 ;;(add-to-list 'auto-mode-alist '("\\.org\\'" . org-display-inline-images))
 
 (add-hook 'c++-mode-hook #'(lambda () (hs-minor-mode 1)))
 (add-hook 'c-mode-hook #'(lambda () (hs-minor-mode 1)))
 
-(use-package weather-scout :ensure (:host github :repo "hsolg/emacs-weather-scout"))
+;;(use-package mule)
 
 (use-package neotree
   :config
@@ -1220,12 +1226,11 @@
 (use-package org-download) ;;:config (setq org-download-image-dir "~/Notes/.images/"))
 (setq org-download-image-dir "~/Notes/.images/")
 
+(use-package ripgrep)
 (use-package
- smartparens
- :ensure t
- :defer t
- :hook (prog-mode eglot org-mode latex-mode)
- :config (require 'smartparens-config))
+ projectile
+ :config
+ (projectile-mode 1))
 
 ;;(use-package savehist :init (savehist-mode))
 (savehist-mode)
@@ -1313,6 +1318,13 @@
 	(evil-define-key 'normal vterm-mode-map (kbd "<return>") #'evil-insert-resume))
 
 (use-package
+ smartparens
+ :ensure t
+ :defer t
+ :hook (prog-mode eglot org-mode latex-mode)
+ :config (require 'smartparens-config))
+
+(use-package
  yasnippet
  :config
  ;;(setq yas-snippet-dirs '("~/.config/emacs/snippets" "~/.config/emacs/elpaca/repos/yasnippet-snippets/snippets/"))
@@ -1335,23 +1347,11 @@
 (setq yasnippet-capf-lookup-by 'name) ;; Prefer the name of the snippet instead
 )
 
-(use-package colorful-mode
- :ensure t
- :defer t
- :diminish
- :hook ((org-mode prog-mode) . colorful-mode))
-
-(use-package ripgrep)
-(use-package
- projectile
- :config
- (projectile-mode 1))
-
-(use-package typit :defer t)
+(use-package zenburn-theme :init (load-theme 'zenburn t))
 
 (use-package transient)
 
-(use-package zenburn-theme :init (load-theme 'zenburn t))
+(use-package typit :defer t)
 
 (setq undo-limit 67108864) ;; 64mb.
 (setq undo-strong-limit 100663296) ;; 96mb.
@@ -1389,6 +1389,8 @@
               ("M-DEL" . vertico-directory-delete-word))
   ;; Tidy shadowed file names
   :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
+
+(use-package weather-scout :ensure (:host github :repo "hsolg/emacs-weather-scout"))
 
 (require 'which-key)
 (which-key-mode t)
